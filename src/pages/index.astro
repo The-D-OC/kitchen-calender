@@ -49,37 +49,48 @@ const reminderOptions: [string, string][] = [
         <div class="clock">
           <div id="clock-time" class="time">--:--</div>
           <div id="clock-date" class="date"></div>
+          <div id="next-up" class="next-up"></div>
         </div>
+        <button id="weather" class="weather-chip" type="button" aria-label="Weather"></button>
         <nav id="member-filter" class="members" aria-label="Show or hide family members"></nav>
+        <div id="timers" class="timers" aria-live="polite"></div>
         <div class="actions">
-          <button id="btn-members" class="btn" type="button">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            Family
+          <button id="btn-timer" class="btn icon" type="button" aria-label="Timers" title="Timers">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2M9 2h6M12 2v3"></path></svg>
           </button>
-          <button id="btn-settings" class="btn icon" type="button" aria-label="Settings">
+          <button id="btn-members" class="btn icon" type="button" aria-label="Family" title="Family members">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </button>
+          <button id="btn-settings" class="btn icon" type="button" aria-label="Settings" title="Settings">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
           </button>
         </div>
       </header>
 
       <main class="layout">
-        <section class="month" aria-label="Month">
+        <section class="month" aria-label="Calendar">
           <div class="month-head">
-            <button id="prev" class="btn icon" type="button" aria-label="Previous month">‹</button>
+            <button id="prev" class="btn icon" type="button" aria-label="Previous">‹</button>
             <h1 id="month-title"></h1>
+            <div id="view-seg" class="seg compact" role="tablist">
+              <button type="button" data-view="month">Month</button>
+              <button type="button" data-view="week">Week</button>
+            </div>
             <button id="today-btn" class="btn" type="button">Today</button>
-            <button id="next" class="btn icon" type="button" aria-label="Next month">›</button>
+            <button id="next" class="btn icon" type="button" aria-label="Next">›</button>
           </div>
-          <div class="weekdays">{weekdays.map((d) => <span>{d}</span>)}</div>
-          <div id="grid" class="grid"></div>
+          <div id="cal-area" class="cal-area">
+            <div id="month-wrap" class="month-wrap">
+              <div class="weekdays">{weekdays.map((d) => <span>{d}</span>)}</div>
+              <div id="grid" class="grid"></div>
+            </div>
+            <div id="week" class="week" hidden></div>
+          </div>
         </section>
 
-        <aside class="agenda" aria-label="Selected day">
-          <div class="agenda-head">
-            <h2 id="agenda-title"></h2>
-            <button id="add-event" class="btn primary" type="button">+ Add</button>
-          </div>
-          <ul id="agenda-list"></ul>
+        <aside class="agenda" aria-label="Day, lists and notes">
+          <div id="side-tabs" class="seg tabs" role="tablist"></div>
+          <div id="side-body" class="side-body"></div>
         </aside>
       </main>
     </div>
@@ -91,6 +102,7 @@ const reminderOptions: [string, string][] = [
           <h2 id="event-dialog-title">New event</h2>
           <button class="btn icon ghost" value="cancel" formnovalidate aria-label="Close">✕</button>
         </header>
+        <p id="event-readonly" class="readonly-note" hidden></p>
         <label class="field"><span>What</span><input name="title" required placeholder="e.g. Swimming lesson" autocomplete="off" maxlength="80" /></label>
         <div class="row">
           <label class="field"><span>Date</span><input type="date" name="date" required /></label>
@@ -100,10 +112,14 @@ const reminderOptions: [string, string][] = [
           <label class="field"><span>Starts</span><input type="time" name="start" /></label>
           <label class="field"><span>Ends</span><input type="time" name="end" /></label>
         </div>
+        <div class="row" id="event-enddate" hidden>
+          <label class="field"><span>Last day <em>(for holidays, trips…)</em></span><input type="date" name="endDate" /></label>
+        </div>
         <div class="field">
           <span>Who <em>(none picked = whole family)</em></span>
           <div id="event-members" class="pick"></div>
         </div>
+        <label class="field"><span>Where</span><input name="location" placeholder="e.g. Leisure centre" autocomplete="off" maxlength="80" /></label>
         <div class="row">
           <label class="field"><span>Repeats</span>
             <select name="repeat">{repeatOptions.map(([v, l]) => <option value={v}>{l}</option>)}</select>
@@ -116,8 +132,8 @@ const reminderOptions: [string, string][] = [
         <footer class="sheet-foot">
           <button type="button" id="event-delete" class="btn danger">Delete</button>
           <span class="spacer"></span>
-          <button class="btn" value="cancel" formnovalidate>Cancel</button>
-          <button class="btn primary" value="save">Save</button>
+          <button class="btn" value="cancel" formnovalidate>Close</button>
+          <button class="btn primary" type="button" id="event-save">Save</button>
         </footer>
       </form>
     </dialog>
@@ -138,47 +154,192 @@ const reminderOptions: [string, string][] = [
       </div>
     </dialog>
 
+    <!-- Timers -->
+    <dialog id="timer-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2>Start a timer</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <label class="field"><span>Name <em>(optional)</em></span><input id="timer-label" placeholder="e.g. Pasta, Oven chips, Screen time" maxlength="40" autocomplete="off" /></label>
+        <div id="timer-presets" class="presets"></div>
+        <div class="row">
+          <label class="field"><span>Or minutes</span><input id="timer-custom" type="number" inputmode="decimal" min="0.5" max="1440" step="0.5" placeholder="e.g. 7" /></label>
+          <button class="btn primary" type="button" id="timer-start">Start</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Sticky note -->
+    <dialog id="note-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2 id="note-dialog-title">New note</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <textarea id="note-text" class="note-input" rows="3" maxlength="200" placeholder="Defrost the chicken 🍗"></textarea>
+        <div class="field"><span>Colour</span><div id="note-colours" class="swatches"></div></div>
+        <div class="field"><span>For</span><div id="note-for" class="pick"></div></div>
+        <footer class="sheet-foot">
+          <button type="button" id="note-delete" class="btn danger">Remove</button>
+          <span class="spacer"></span>
+          <button class="btn" type="button" data-close>Cancel</button>
+          <button class="btn primary" type="button" id="note-save">Save</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Family Bell list -->
+    <dialog id="bells-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2>Family Bell</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <p class="muted small">Scheduled chimes for the whole house — the tablet plays a sound, says the message out loud and shows it full screen.</p>
+        <div id="bells-list" class="bells-list"></div>
+        <div id="bell-suggestions" class="suggestions"></div>
+        <footer class="sheet-foot">
+          <button class="btn" type="button" id="bell-add">+ New bell</button>
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Family Bell editor -->
+    <dialog id="bell-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2 id="bell-dialog-title">New bell</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <label class="field"><span>Message</span><input id="bell-label" placeholder="e.g. Dinner is ready" maxlength="60" autocomplete="off" /></label>
+        <div class="row">
+          <label class="field"><span>Time</span><input id="bell-time" type="time" /></label>
+          <label class="field"><span>Sound</span>
+            <select id="bell-sound"><option value="chime">Chime</option><option value="bell">School bell</option><option value="gentle">Gentle</option></select>
+          </label>
+          <button class="btn" type="button" id="bell-test">▶ Test</button>
+        </div>
+        <div class="field"><span>Days</span><div id="bell-days" class="days"></div></div>
+        <div class="field"><span>Who it’s for <em>(optional)</em></span><div id="bell-members" class="pick"></div></div>
+        <label class="toggle"><input type="checkbox" id="bell-speak" /> <span>Say the message out loud</span></label>
+        <footer class="sheet-foot">
+          <button type="button" id="bell-delete" class="btn danger">Delete</button>
+          <span class="spacer"></span>
+          <button class="btn" type="button" data-close>Cancel</button>
+          <button class="btn primary" type="button" id="bell-save">Save</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Weather -->
+    <dialog id="weather-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <div><h2 id="weather-place"></h2><p id="weather-now" class="muted"></p></div>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <div id="weather-days" class="weather-days"></div>
+        <footer class="sheet-foot">
+          <small class="muted">Forecast from Open-Meteo</small>
+          <span class="spacer"></span>
+          <button class="btn" type="button" id="weather-refresh">Refresh</button>
+          <button class="btn primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+
     <!-- Settings -->
-    <dialog id="settings-dialog" class="sheet">
+    <dialog id="settings-dialog" class="sheet wide">
       <div class="sheet-inner">
         <header class="sheet-head">
           <h2>Settings</h2>
           <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
         </header>
 
-        <div class="row">
-          <label class="field"><span>Screen saver after</span>
-            <select id="set-idle">{idleOptions.map(([v, l]) => <option value={String(v)}>{l}</option>)}</select>
-          </label>
-          <button class="btn" type="button" id="set-saver-now">Preview</button>
-        </div>
-        <label class="toggle"><input type="checkbox" id="set-awake" /> <span>Keep the screen on while the calendar is open</span></label>
-        <small id="wake-status" class="muted"></small>
+        <section class="set-section">
+          <h3>Screen</h3>
+          <div class="row">
+            <label class="field"><span>Screen saver after</span>
+              <select id="set-idle">{idleOptions.map(([v, l]) => <option value={String(v)}>{l}</option>)}</select>
+            </label>
+            <label class="field"><span>Dim from</span><select id="set-night-start"></select></label>
+            <label class="field"><span>until</span><select id="set-night-end"></select></label>
+            <button class="btn" type="button" id="set-saver-now">Preview</button>
+          </div>
+          <label class="toggle"><input type="checkbox" id="set-awake" /> <span>Keep the screen on while the calendar is open</span></label>
+          <small id="wake-status" class="muted"></small>
+        </section>
 
-        <div class="field">
-          <span>Notifications</span>
+        <section class="set-section">
+          <h3>Photo frame</h3>
+          <label class="toggle"><input type="checkbox" id="set-photos" /> <span>Show family photos behind the screen saver clock</span></label>
+          <div class="row">
+            <button class="btn" type="button" id="photo-add">+ Add photos</button>
+            <button class="btn danger" type="button" id="photo-clear">Remove all</button>
+            <label class="field narrow"><span>Change every</span>
+              <select id="set-photo-secs"><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="300">5 minutes</option></select>
+            </label>
+            <input type="file" id="photo-input" accept="image/*" multiple hidden />
+          </div>
+          <small id="photo-status" class="muted"></small>
+        </section>
+
+        <section class="set-section" id="settings-weather">
+          <h3>Weather</h3>
+          <div class="row">
+            <label class="field"><span>Town or postcode area</span><input id="weather-query" placeholder="e.g. Manchester" autocomplete="off" /></label>
+            <button class="btn" type="button" id="weather-search">Search</button>
+          </div>
+          <div id="weather-results" class="results"></div>
+          <div class="row"><small id="weather-current" class="muted"></small><button class="btn small ghost" type="button" id="weather-remove">Remove</button></div>
+        </section>
+
+        <section class="set-section" id="settings-feeds">
+          <h3>Linked calendars</h3>
+          <p class="muted small">Show Google, iCloud or Outlook calendars here. Paste the calendar’s <b>secret address in iCal format</b> (Google Calendar → Settings → your calendar → Integrate calendar). Updates every 30 minutes.</p>
+          <div id="feeds-list" class="feeds-list"></div>
+          <div class="row">
+            <label class="field"><span>Name</span><input id="feed-name" placeholder="e.g. School, Work" maxlength="30" autocomplete="off" /></label>
+            <label class="field"><span>Whose</span><select id="feed-who"></select></label>
+          </div>
+          <div class="row">
+            <label class="field"><span>Secret iCal link</span><input id="feed-url" placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" autocomplete="off" inputmode="url" /></label>
+            <button class="btn primary" type="button" id="feed-add">Link</button>
+          </div>
+          <div class="row">
+            <button class="btn small" type="button" id="ics-import">Import an .ics file once</button>
+            <input type="file" id="ics-file" accept=".ics,text/calendar" hidden />
+          </div>
+        </section>
+
+        <section class="set-section">
+          <h3>Family Bell</h3>
+          <div class="row"><button class="btn" type="button" id="btn-bells">Manage bells</button><small id="bells-count" class="muted"></small></div>
+        </section>
+
+        <section class="set-section">
+          <h3>Sounds &amp; notifications</h3>
+          <label class="toggle"><input type="checkbox" id="set-voice" /> <span>Speak bells and timers out loud</span></label>
           <div class="row">
             <button class="btn" type="button" id="set-notify">Turn notifications on</button>
             <button class="btn" type="button" id="set-test">Send a test</button>
+            <label class="field narrow"><span>Morning summary</span><select id="set-summary"></select></label>
           </div>
           <small id="notify-status" class="muted"></small>
-        </div>
+        </section>
 
-        <div class="row">
-          <label class="field"><span>Morning summary</span><select id="set-summary"></select></label>
-          <label class="field"><span>Dim screen saver from</span><select id="set-night-start"></select></label>
-          <label class="field"><span>until</span><select id="set-night-end"></select></label>
-        </div>
-
-        <div class="field">
-          <span>Backup</span>
+        <section class="set-section">
+          <h3>Backup</h3>
           <div class="row">
             <button class="btn" type="button" id="export">Export</button>
             <button class="btn" type="button" id="import">Import</button>
             <input type="file" id="import-file" accept="application/json,.json" hidden />
           </div>
           <small class="muted">Everything is saved on this tablet. Export now and then so you have a copy.</small>
-        </div>
+        </section>
 
         <footer class="sheet-foot">
           <span class="spacer"></span>
@@ -200,6 +361,7 @@ const reminderOptions: [string, string][] = [
     </dialog>
 
     <div id="screensaver" class="saver" aria-live="polite"></div>
+    <div id="alert" class="alert" role="alertdialog" aria-live="assertive"></div>
     <div id="toast" role="status"></div>
 
     <script>

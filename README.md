@@ -4,17 +4,31 @@ An always-on kitchen calendar for a wall or counter tablet. Built with **Astro +
 
 ## Features
 
-- **Month view and day agenda.** The layout is made for touch: big tap targets, and you swipe left or right to change month.
-- **Family members.** Add as many people as you like. Each gets a coloured avatar showing their initials. Pick from 10 preset colours or choose any colour you want.
-- **Member filter.** Tap someone's avatar in the top bar to hide or show their events.
-- **Events.** Each event can be all-day or timed. You can assign it to one or more people (or leave it for the whole family), and add notes.
-  - Events can repeat daily, weekly, fortnightly, monthly or yearly (good for birthdays).
+Inspired by the Amazon Echo Show family hub and Google Nest Hub, built for a touch tablet in the kitchen.
+
+**Calendar**
+- **Month and week views.** Events are colour-coded by family member, and you swipe left or right to move between months or weeks.
+- **Family members.** Each person gets a coloured avatar showing their initials. Tap someone's avatar in the top bar to hide or show their events. Hold it to see only their day.
+- **Events.**
+  - Events can be timed, all-day, or span several days (holidays, trips).
+  - They can have a location and notes, and repeat daily, weekly, fortnightly, monthly or yearly.
   - Reminders can go off at the start, 10, 30 or 60 minutes before, or 1 day before.
-- **Screen saver.** After a few idle minutes the calendar is replaced by a big clock and a pulsing **"N things on today"** banner listing today's events. It also previews tomorrow, dims at night and drifts slowly to avoid screen burn-in. Tap anywhere to go back to the calendar.
-- **Screen-off notification.** When the screen turns off or the tablet locks, you get a system notification listing what's still on today, if anything is. There's also a morning summary and per-event reminders.
-- **When the screen comes back on**, an in-app banner shows what's on today.
-- **Keep the screen on.** This uses the Screen Wake Lock API so the display never goes to sleep, and the screen saver handles idle time instead.
-- **Backup.** Export to and import from a JSON file (in Settings).
+- **Clash warnings.** If you double-book the same person, you're warned before saving.
+- **"Next up" under the clock.** For example, *17:30 Swimming · in 2 h*.
+- **Linked calendars.** Google, iCloud and Outlook calendars can be added by their secret iCal link (see below). They refresh every 30 minutes, and events show as read-only. You can also import an `.ics` file once.
+
+**Family hub**
+- **Sticky notes.** Leave a note for everyone or for one person. Pick its colour, and it appears on the screen saver.
+- **Shopping and to-do lists.** Tick items off and clear ticked items. To-dos can be assigned to a person. Type `milk, bread, eggs` to add several items at once.
+- **Kitchen timers.** You can run several at once. They count down in the top bar and the screen saver, and survive a page reload. When one finishes it plays an alarm, says "Pasta is done" out loud and shows a full-screen alert with a **+1 min** button.
+- **Family Bell.** Scheduled household chimes ("Dinner is ready", "Shoes on for school") on chosen days. Each plays a chime, says the message aloud and shows it full screen. Common bells are offered as suggestions.
+- **Weather.** Current conditions, today's high and low, and a 7-day forecast from Open-Meteo, which is free and needs no key.
+
+**Always-on display**
+- **Screen saver and photo frame.** A big clock, weather, a pulsing **"N things on today"** banner, today's events, running timers and sticky notes. They're shown over a slideshow of your family photos, which are stored on the tablet. It dims at night and drifts slowly to protect the screen.
+- **Screen-off notification.** When the screen turns off or the tablet locks, you get a system notification listing what's still on today, if anything is. There's also a morning summary, and notifications for reminders, timers and bells.
+- **Keep the screen on.** This uses the Screen Wake Lock API.
+- **Backup.** Export to and import from a JSON file.
 - **Installable.** You can add it to the home screen. It then opens full-screen in landscape like an app.
 
 ## Run it
@@ -43,6 +57,18 @@ One-time setup:
 
 To deploy from your own computer instead, run `npx wrangler login`, then `npm run deploy`. The Worker's name and settings live in `wrangler.jsonc`.
 
+## Linking Google / iCloud / Outlook calendars
+
+Browsers aren't allowed to read calendar feeds from Google and the others directly. The small Cloudflare Worker in `worker/index.ts` fetches the feed for you at `/api/ics`. It only ever returns real calendar data, so it can't be misused to fetch other things. This means linked calendars work on the Cloudflare deployment, or locally with `npm run cf:dev`, but not with plain `npm run dev`.
+
+Where to find the secret iCal link:
+
+- **Google Calendar (on a computer).** Go to Settings → pick the calendar → *Integrate calendar* → **Secret address in iCal format**.
+- **iCloud.** In the Calendar app, share the calendar as a **Public Calendar** and copy the `webcal://` link.
+- **Outlook.com.** Go to Settings → Calendar → Shared calendars → **Publish a calendar** → ICS link.
+
+In the tablet's ⚙ Settings → Linked calendars, paste the link, give it a name, and choose whose calendar it is. It then appears in that person's colour.
+
 ## Important: use HTTPS
 
 Notifications, the service worker and the screen wake lock **only work in a secure context**. That means `https://…` or `http://localhost`. Opening it as `http://192.168.x.x` from the tablet will show the calendar fine, but those features will be off.
@@ -66,7 +92,7 @@ The easiest options:
 
 ## Notes and limits
 
-- **Data lives in this browser's storage on this tablet.** It doesn't sync to phones. Use Export now and then to keep a backup. Syncing would need a small backend (for example Supabase or a JSON file on a server).
+- **Data lives in this browser's storage on this tablet.** It doesn't sync to phones, although linked calendars pull events in from Google, iCloud or Outlook. Use Export now and then to keep a backup. Syncing would need a small backend (for example Supabase or a JSON file on a server).
 - **Timing while the screen is off.** Browsers throttle or pause pages while the screen is off. The "screen turned off" notification fires reliably at the moment the screen goes off. Reminders that fall due while the screen is *off* may be delayed until it wakes. With "Keep the screen on" enabled, the page stays active and reminders fire on time.
 - The week starts on Monday and times are 24-hour (en-GB). Change `LOCALE` in `src/scripts/dates.ts` and the `offset` calculation in `renderGrid` if you want otherwise.
 
@@ -77,12 +103,21 @@ src/
   pages/index.astro      markup + dialogs
   styles/global.css      all styling
   scripts/
-    app.ts               UI: month grid, agenda, event/member/settings dialogs
-    store.ts             state + localStorage persistence
-    dates.ts             date keys, repeat rules, sorting
-    saver.ts             idle screen saver with today's banner
+    app.ts               UI: month/week views, day panel, event/member/settings dialogs
+    store.ts             state + localStorage persistence (migrates older saves)
+    dates.ts             date keys, repeat rules, clash detection
+    widgets.ts           sticky notes + shopping/to-do lists
+    timers.ts            kitchen timers
+    bells.ts             Family Bell scheduler + editor
+    weather.ts           Open-Meteo forecast + place search
+    photos.ts            screen-saver photos (IndexedDB)
+    ics.ts, feeds.ts     .ics parser + linked calendar sync
+    saver.ts             screen saver / photo frame
     notify.ts            system notifications (screen-off, reminders, morning summary)
+    sound.ts             synthesised chimes + text-to-speech
+    ui.ts                toast, confirm and full-screen alert
     wakelock.ts          Screen Wake Lock handling
     dom.ts, types.ts     helpers + types
-public/                  manifest, service worker, icons
+worker/index.ts          Cloudflare Worker: serves dist/ + /api/ics calendar fetcher
+public/                  manifest, service worker, icons, _headers
 ```

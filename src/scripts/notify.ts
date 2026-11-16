@@ -12,14 +12,14 @@ import { addDays, endOf, eventsOn, startOf, toKey } from './dates';
 const FIRED_KEY = 'family-calendar:fired';
 const SCREEN_OFF_GAP_MS = 2 * 60 * 60 * 1000; // at most one screen-off alert every 2 hours
 
-function readFired(): Record<string, number> {
+export function readFired(): Record<string, number> {
   try {
     return JSON.parse(localStorage.getItem(FIRED_KEY) || '{}');
   } catch {
     return {};
   }
 }
-function markFired(id: string) {
+export function markFired(id: string) {
   const f = readFired();
   f[id] = Date.now();
   const cutoff = Date.now() - 3 * 86_400_000;

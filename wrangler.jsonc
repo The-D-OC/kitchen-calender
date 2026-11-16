@@ -1,11 +1,14 @@
-// Cloudflare Workers (static assets) config.
-// Deploy with:  npm run deploy   (or connect the GitHub repo in the Cloudflare dashboard)
+// Cloudflare Workers config: static site from dist/ + a small Worker for /api/*.
+// Deploy with:  npm run deploy   (GitHub Actions does this on every push to main)
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "kitchen-calendar",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
   }
 }

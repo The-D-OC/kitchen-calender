@@ -1,4 +1,4 @@
-import type { State } from './types';
+import type { Settings, State } from './types';
 
 const KEY = 'family-calendar:v1';
 
@@ -15,37 +15,60 @@ export const PALETTE = [
   '#5c6bc0', // indigo
 ];
 
+export const NOTE_COLOURS = ['#ffe27a', '#ffb3a7', '#b8e6b0', '#a9d6f5', '#d9c2f0', '#ffd0e6'];
+
 export const uid = (): string =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()
     : Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 
+const defaultSettings = (): Settings => ({
+  idleMinutes: 5,
+  keepAwake: true,
+  notifications: false,
+  nightStart: 22,
+  nightEnd: 6,
+  summaryHour: 7,
+  view: 'month',
+  weather: null,
+  photosInSaver: true,
+  photoSeconds: 60,
+  voice: true,
+});
+
 const defaults = (): State => ({
-  version: 1,
+  version: 2,
   members: [{ id: uid(), name: 'Family', color: '#2e86ab' }],
   events: [],
-  settings: {
-    idleMinutes: 5,
-    keepAwake: true,
-    notifications: false,
-    nightStart: 22,
-    nightEnd: 6,
-    summaryHour: 7,
-  },
+  notes: [],
+  items: [],
+  bells: [],
+  timers: [],
+  feeds: [],
+  settings: defaultSettings(),
 });
+
+/** Accepts v1 or v2 data and fills in anything missing */
+function normalise(saved: Partial<State> & Record<string, unknown>): State {
+  const d = defaults();
+  const arr = <T>(v: unknown, fallback: T[]): T[] => (Array.isArray(v) ? (v as T[]) : fallback);
+  return {
+    version: 2,
+    members: arr(saved.members, d.members),
+    events: arr(saved.events, []),
+    notes: arr(saved.notes, []),
+    items: arr(saved.items, []),
+    bells: arr(saved.bells, []),
+    timers: arr(saved.timers, []),
+    feeds: arr(saved.feeds, []),
+    settings: { ...d.settings, ...((saved.settings as Partial<Settings>) ?? {}) },
+  };
+}
 
 function load(): State {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return defaults();
-    const saved = JSON.parse(raw) as Partial<State>;
-    const d = defaults();
-    return {
-      version: 1,
-      members: Array.isArray(saved.members) ? saved.members : d.members,
-      events: Array.isArray(saved.events) ? saved.events : [],
-      settings: { ...d.settings, ...(saved.settings ?? {}) },
-    };
+    return raw ? normalise(JSON.parse(raw)) : defaults();
   } catch {
     return defaults();
   }
@@ -82,16 +105,11 @@ export const store = {
   },
   /** Validate an imported backup and turn it into a State */
   parseBackup(text: string): State {
-    const data = JSON.parse(text) as Partial<State>;
+    const data = JSON.parse(text);
     if (!Array.isArray(data.members) || !Array.isArray(data.events)) {
       throw new Error('That file does not look like a calendar backup.');
     }
-    return {
-      version: 1,
-      members: data.members,
-      events: data.events,
-      settings: { ...defaults().settings, ...(data.settings ?? {}) },
-    };
+    return normalise(data);
   },
 };
 
