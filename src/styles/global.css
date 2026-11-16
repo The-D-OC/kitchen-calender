@@ -523,3 +523,55 @@ dialog.sheet.wide { width: min(760px, 95vw); }
 .pair-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; font-size: 17px; line-height: 1.4; }
 #pair-link { font-size: 12px; word-break: break-all; }
 @media (max-width: 640px) { .pair { grid-template-columns: 1fr; } .pair-qr { max-width: 240px; margin: 0 auto; } }
+
+/* countdowns + bin notice strip above the side tabs */
+.side-top { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; flex: none; }
+.side-top::-webkit-scrollbar { display: none; }
+.side-top:empty { display: none; }
+.cd-chip { flex: none; display: flex; align-items: center; gap: 8px; border: 0; background: var(--panel-2); border-radius: 14px; padding: 6px 12px 6px 8px; min-height: 52px; text-align: left; max-width: 190px; }
+.cd-chip.soon { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent); }
+.cd-chip.today { background: var(--accent); color: var(--accent-ink); }
+.cd-chip.today small { color: var(--accent-ink); }
+.cd-chip.add { opacity: 0.7; }
+.cd-emoji { font-size: 26px; line-height: 1; }
+.cd-text { display: flex; flex-direction: column; min-width: 0; }
+.cd-text b { font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cd-text small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cd-list { display: flex; flex-direction: column; gap: 8px; }
+.cd-row { display: flex; align-items: center; gap: 12px; }
+.cd-row .cd-chip { max-width: none; flex: 1; }
+.cd-row.past { opacity: 0.45; }
+.cd-date { color: var(--muted); font-size: 14px; white-space: nowrap; }
+.emojis { display: flex; flex-wrap: wrap; gap: 6px; }
+.emoji-btn { width: 52px; height: 52px; border-radius: 14px; border: 2px solid var(--line); background: var(--panel-2); font-size: 26px; }
+.emoji-btn.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, var(--panel-2)); }
+
+/* bins */
+.bin-icon { flex: none; display: block; }
+.cell-top { display: flex; align-items: center; gap: 2px; flex: none; }
+.wbins { display: flex; gap: 2px; margin-top: 2px; }
+.bin-notice { flex: none; display: flex; align-items: center; gap: 10px; border: 0; border-radius: 14px; padding: 6px 14px 6px 10px; min-height: 52px; text-align: left; background: color-mix(in srgb, var(--accent) 18%, var(--panel-2)); box-shadow: inset 0 0 0 2px var(--accent); }
+.bin-notice > span:last-child { display: flex; flex-direction: column; }
+.bin-notice b { font-size: 16px; white-space: nowrap; }
+.bin-notice small { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.bin-icons { display: flex; gap: 2px; }
+.agenda-bins { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; border: 0; background: var(--panel-2); border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; text-align: left; font-size: 16px; font-weight: 600; flex: none; }
+.agenda-bin { display: inline-flex; align-items: center; gap: 6px; }
+.bins-list { display: flex; flex-direction: column; gap: 12px; }
+.bin-row { background: var(--panel-2); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.bin-row .input, .bin-row input, .bin-row select { background: var(--panel); }
+.bin-row-head { display: flex; align-items: center; gap: 12px; }
+.suggestions .btn svg { margin-right: 2px; }
+
+/* screen saver additions */
+.saver-bins { display: flex; width: fit-content; margin-left: auto; margin-right: auto; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 20px; border-radius: 999px; background: rgba(244,182,90,.15); border: 2px solid var(--accent); font-size: 22px; }
+.saver-cds { display: flex; gap: 12px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+.saver-cd { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.06); border-radius: 999px; padding: 6px 16px 6px 10px; font-size: 18px; }
+.saver-cd .cd-emoji { font-size: 24px; }
+.saver-cd small { color: var(--muted); font-size: 15px; }
+.saver.has-photo .saver-cd { background: rgba(10,11,14,.6); }
+@media (max-height: 880px) {
+  .saver-bins { font-size: 18px; margin-top: 10px; padding: 6px 16px; }
+  .saver-cds { margin-top: 10px; }
+  .saver-cd { font-size: 15px; padding: 4px 12px 4px 8px; }
+}

@@ -89,6 +89,7 @@ const reminderOptions: [string, string][] = [
         </section>
 
         <aside class="agenda" aria-label="Day, lists and notes">
+          <div id="side-top" class="side-top"></div>
           <div id="side-tabs" class="seg tabs" role="tablist"></div>
           <div id="side-body" class="side-body"></div>
         </aside>
@@ -322,6 +323,14 @@ const reminderOptions: [string, string][] = [
         </section>
 
         <section class="set-section">
+          <h3>Bin days &amp; countdowns</h3>
+          <div class="row">
+            <button class="btn" type="button" id="btn-bins">🗑️ Bin days</button>
+            <button class="btn" type="button" id="btn-countdowns">⏳ Countdowns</button>
+          </div>
+        </section>
+
+        <section class="set-section">
           <h3>Family Bell</h3>
           <div class="row"><button class="btn" type="button" id="btn-bells">Manage bells</button><small id="bells-count" class="muted"></small></div>
         </section>
@@ -428,6 +437,68 @@ const reminderOptions: [string, string][] = [
         <footer class="sheet-foot">
           <span class="spacer"></span>
           <button class="btn" type="button" id="welcome-fresh">Start fresh</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Countdowns -->
+    <dialog id="cd-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2>Countdowns</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <div id="cd-list" class="cd-list"></div>
+        <div id="cd-suggestions" class="suggestions"></div>
+        <div class="row">
+          <span class="muted small">Count in</span>
+          <div id="cd-unit" class="seg compact">
+            <button type="button" data-unit="sleeps">Sleeps</button>
+            <button type="button" data-unit="days">Days</button>
+          </div>
+        </div>
+        <footer class="sheet-foot">
+          <button class="btn" type="button" id="cd-add">+ New countdown</button>
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+    <dialog id="cd-edit" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2 id="cd-edit-title">New countdown</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <label class="field"><span>What are we counting down to?</span><input id="cd-title" maxlength="40" placeholder="e.g. Holiday in Spain" autocomplete="off" /></label>
+        <div class="row">
+          <label class="field"><span>Date</span><input id="cd-date" type="date" /></label>
+          <label class="toggle"><input type="checkbox" id="cd-yearly" /> <span>Every year</span></label>
+        </div>
+        <div class="field"><span>Icon</span><div id="cd-emojis" class="emojis"></div></div>
+        <footer class="sheet-foot">
+          <button type="button" id="cd-delete" class="btn danger">Remove</button>
+          <span class="spacer"></span>
+          <button class="btn" type="button" data-close>Cancel</button>
+          <button class="btn primary" type="button" id="cd-save">Save</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Bin days -->
+    <dialog id="bins-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2>Bin days</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <div id="bins-list" class="bins-list"></div>
+        <div id="bin-presets" class="suggestions"></div>
+        <label class="field"><span>Reminder</span><select id="bin-remind"></select></label>
+        <small class="muted">Bank holiday changes aren’t automatic — just move the collection date if your council shifts it.</small>
+        <footer class="sheet-foot">
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" data-close>Done</button>
         </footer>
       </div>
     </dialog>

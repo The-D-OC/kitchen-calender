@@ -34,6 +34,9 @@ const defaultSettings = (): Settings => ({
   photosInSaver: true,
   photoSeconds: 60,
   voice: true,
+  countdownUnit: 'sleeps',
+  binRemindWhen: 'before',
+  binRemindTime: '19:00',
 });
 
 const defaults = (): State => ({
@@ -45,6 +48,8 @@ const defaults = (): State => ({
   bells: [],
   timers: [],
   feeds: [],
+  countdowns: [],
+  bins: [],
   settings: defaultSettings(),
 });
 
@@ -61,6 +66,8 @@ function normalise(saved: Partial<State> & Record<string, unknown>): State {
     bells: arr(saved.bells, []),
     timers: arr(saved.timers, []),
     feeds: arr(saved.feeds, []),
+    countdowns: arr(saved.countdowns, []),
+    bins: arr(saved.bins, []),
     settings: { ...d.settings, ...((saved.settings as Partial<Settings>) ?? {}) },
   };
 }

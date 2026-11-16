@@ -85,6 +85,24 @@ export interface Feed {
   error?: string;
 }
 
+export interface Countdown {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  emoji: string;
+  /** Rolls on to next year once it has passed (Christmas, birthdays) */
+  yearly: boolean;
+}
+
+export interface Bin {
+  id: string;
+  name: string; // e.g. "Recycling"
+  color: string; // bin colour
+  /** Any known collection date for this bin, YYYY-MM-DD */
+  date: string;
+  everyWeeks: number; // 1 = weekly, 2 = fortnightly…
+}
+
 export interface Place {
   name: string;
   lat: number;
@@ -109,6 +127,10 @@ export interface Settings {
   photoSeconds: number;
   /** Speak bells and timers out loud */
   voice: boolean;
+  countdownUnit: 'sleeps' | 'days';
+  /** Bin reminder: evening before or morning of, at this time ('' = off) */
+  binRemindWhen: 'before' | 'same';
+  binRemindTime: string;
 }
 
 export interface State {
@@ -120,5 +142,7 @@ export interface State {
   bells: Bell[];
   timers: Timer[];
   feeds: Feed[];
+  countdowns: Countdown[];
+  bins: Bin[];
   settings: Settings;
 }

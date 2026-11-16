@@ -29,6 +29,8 @@ import { addPhotos, clearPhotos, photoCount } from './photos';
 import { importIcsFile, initFeeds, normaliseUrl, syncFeed } from './feeds';
 import { householdKey, initHousehold } from './household';
 import { backupStatusText, initBackup } from './backup';
+import { countdownChip, initCountdowns, openCountdowns, upcoming } from './countdowns';
+import { binIcon, binLabel, binNoticeEl, binsOn, initBins, openBins } from './bins';
 
 /* ------------------------------ state ------------------------------ */
 
@@ -66,6 +68,7 @@ function tick() {
   } else {
     renderNextUp();
     renderAgendaStatus();
+    renderSideTop();
   }
 }
 
@@ -238,7 +241,12 @@ function renderGrid() {
           onclick: () => onDayTap(key),
           onkeydown: (e: KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && onDayTap(key),
         },
-        h('span', { class: 'num' }, String(d.getDate())),
+        h(
+          'div',
+          { class: 'cell-top' },
+          h('span', { class: 'num' }, String(d.getDate())),
+          ...binsOn(key).map((b) => binIcon(b.color, 17)),
+        ),
         h(
           'div',
           { class: 'pills' },
@@ -299,6 +307,7 @@ function renderWeek() {
           { type: 'button', class: 'whead', onclick: () => onDayTap(key) },
           h('span', { class: 'wname' }, d.toLocaleDateString(LOCALE, { weekday: 'short' })),
           h('span', { class: 'num' }, String(d.getDate())),
+          binsOn(key).length ? h('span', { class: 'wbins' }, ...binsOn(key).map((b) => binIcon(b.color, 18))) : null,
         ),
         h(
           'div',
@@ -336,7 +345,20 @@ function onDayTap(key: string) {
 
 /* ------------------------------ sidebar ---------------------------- */
 
+/** Bin notice + countdowns above the side panel tabs */
+function renderSideTop() {
+  const top = $('#side-top');
+  const notice = binNoticeEl();
+  const cds = upcoming().slice(0, notice ? 2 : 3);
+  top.replaceChildren(
+    ...(notice ? [notice] : []),
+    ...cds.map((c) => countdownChip(c, openCountdowns)),
+    ...(!cds.length ? [h('button', { type: 'button', class: 'cd-chip add', onclick: openCountdowns }, h('span', { class: 'cd-emoji' }, '⏳'), h('span', { class: 'cd-text' }, h('b', {}, 'Countdown'), h('small', {}, 'Add one')))] : []),
+  );
+}
+
 function renderSide() {
+  renderSideTop();
   const s = S();
   const listCount = s.items.filter((i) => !i.done).length;
   const tabs: [typeof sideTab, string, number][] = [
@@ -377,9 +399,19 @@ function renderAgenda(root: HTMLElement) {
     h('h2', {}, dayLabel(selected)),
     h('button', { type: 'button', class: 'btn primary', onclick: () => openEvent(undefined, selected) }, '+ Add'),
   );
+  const bins = binsOn(selected);
+  const binsBox =
+    bins.length > 0
+      ? h(
+          'button',
+          { type: 'button', class: 'agenda-bins', onclick: openBins },
+          ...bins.map((b) => h('span', { class: 'agenda-bin' }, binIcon(b.color, 26), binLabel(b))),
+        )
+      : null;
   if (!evs.length) {
     root.replaceChildren(
       head,
+      ...(binsBox ? [binsBox] : []),
       h(
         'div',
         { class: 'empty' },
@@ -391,6 +423,7 @@ function renderAgenda(root: HTMLElement) {
   }
   root.replaceChildren(
     head,
+    ...(binsBox ? [binsBox] : []),
     h(
       'ul',
       { id: 'agenda-list' },
@@ -1078,6 +1111,9 @@ initNotes();
 initFeeds(S);
 initHousehold();
 initBackup();
+initCountdowns();
+initBins();
+$('#btn-countdowns').addEventListener('click', openCountdowns);
 
 store.subscribe(() => render());
 tick();

@@ -29,6 +29,13 @@ Inspired by the Amazon Echo Show family hub and Google Nest Hub, built for a tou
 - **Shopping and to-do lists.** Tick items off and clear ticked items. To-dos can be assigned to a person. Type `milk, bread, eggs` to add several items at once.
 - **Kitchen timers.** You can run several at once. They count down in the top bar and the screen saver, and survive a page reload. When one finishes it plays an alarm, says "Pasta is done" out loud and shows a full-screen alert with a **+1 min** button.
 - **Family Bell.** Scheduled household chimes ("Dinner is ready", "Shoes on for school") on chosen days. Each plays a chime, says the message aloud and shows it full screen. Common bells are offered as suggestions.
+- **Countdowns.** For example "🎄 39 sleeps till Christmas" or "✈️ 12 days to Spain", shown at the top of the side panel and on the screen saver.
+  - Countdowns can repeat yearly and count in sleeps or days.
+  - Christmas, Halloween and the like are offered as suggestions, along with birthdays already on your calendar.
+- **Bin days.** Small coloured wheelie-bin icons appear on collection days in the month and week views and in the day panel.
+  - Collections can be weekly, fortnightly, or every 3 or 4 weeks, and bins come in UK council colours.
+  - A **Bins out tonight** notice shows from 3pm the day before.
+  - An optional reminder, either the evening before or the same morning, plays a chime, says which bins aloud and shows a full-screen alert.
 - **Weather.** Current conditions, today's high and low, and a 7-day forecast from Open-Meteo, which is free and needs no key.
 
 **Always-on display**
@@ -131,6 +138,8 @@ src/
     timers.ts            kitchen timers
     bells.ts             Family Bell scheduler + editor
     weather.ts           Open-Meteo forecast + place search
+    countdowns.ts        countdowns (sleeps/days, yearly, suggestions)
+    bins.ts              bin collection days, notice, reminder
     photos.ts            screen-saver photos (IndexedDB)
     ics.ts, feeds.ts     .ics parser + linked calendar sync
     saver.ts             screen saver / photo frame

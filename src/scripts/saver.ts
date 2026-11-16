@@ -5,6 +5,8 @@ import { countLabel } from './notify';
 import { describeWeather, type Forecast } from './weather';
 import { listPhotos } from './photos';
 import { fmtLeft } from './timers';
+import { countdownLabel, upcoming as upcomingCountdowns } from './countdowns';
+import { binIcon, binNotice } from './bins';
 
 /* ------------------------------------------------------------------ *
  * Screen saver / ambient mode: after N idle minutes the calendar is
@@ -173,6 +175,25 @@ export function initSaver({ getState, colorOf, getForecast }: Deps) {
         }),
       );
 
+    const bn = binNotice(now);
+    const binsEl =
+      bn &&
+      h(
+        'div',
+        { class: 'saver-bins' },
+        ...bn.bins.map((b) => binIcon(b.color, 34)),
+        h('b', {}, bn.when === 'tonight' ? 'Bins out tonight' : 'Bin day today'),
+        ` · ${bn.bins.map((b) => b.name).join(' + ')}`,
+      );
+    const cds = upcomingCountdowns().slice(0, 3);
+    const cdEl =
+      cds.length > 0 &&
+      h(
+        'div',
+        { class: 'saver-cds' },
+        ...cds.map((c) => h('div', { class: 'saver-cd' }, h('span', { class: 'cd-emoji' }, c.emoji), h('b', {}, countdownLabel(c)), h('small', {}, c.title))),
+      );
+
     const next =
       tomorrow.length > 0 &&
       h(
@@ -196,9 +217,11 @@ export function initSaver({ getState, colorOf, getForecast }: Deps) {
         h('div', { class: 'saver-date' }, now.toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' })),
         weather,
         banner,
+        binsEl,
         today.length > 0 && list,
         timersEl,
         notesEl,
+        cdEl,
         next,
         h('div', { class: 'saver-hint' }, 'Tap anywhere to open the calendar'),
       ),
