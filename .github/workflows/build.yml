@@ -1,0 +1,28 @@
+name: Build check
+
+# Deploys are done by Cloudflare itself (Workers Builds, connected in the
+# Cloudflare dashboard) — no secrets needed here. This just makes sure every
+# push type-checks and builds.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check and build
+        run: npm run build
+      - name: Check the Cloudflare config
+        run: npx wrangler deploy --dry-run
