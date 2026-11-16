@@ -17,6 +17,13 @@ Inspired by the Amazon Echo Show family hub and Google Nest Hub, built for a tou
 - **"Next up" under the clock.** For example, *17:30 Swimming · in 2 h*.
 - **Linked calendars.** Google, iCloud and Outlook calendars can be added by their secret iCal link (see below). They refresh every 30 minutes, and events show as read-only. You can also import an `.ics` file once.
 
+**Send from your phone**
+- **Pair each phone once.** On the tablet, go to ⚙ Settings → Phones → *Add a phone*, then scan the QR code with the phone's camera. That opens the **Send to the kitchen** page, which you can add to your home screen.
+- **What phones can send.** Events (with who, time, location, reminder and notes), shopping items, to-dos and sticky notes.
+- **The tablet collects them** within 30 seconds, plays a soft chime and shows "📱 Sam added Dentist · Thu 19 Nov".
+- **Android sharing.** Share text or a link from any app to *To Kitchen* and it fills in a new event.
+- **New code.** *New code* on the tablet unpairs every phone at once, for example if a phone is lost.
+
 **Family hub**
 - **Sticky notes.** Leave a note for everyone or for one person. Pick its colour, and it appears on the screen saver.
 - **Shopping and to-do lists.** Tick items off and clear ticked items. To-dos can be assigned to a person. Type `milk, bread, eggs` to add several items at once.
@@ -56,6 +63,16 @@ One-time setup:
 4. **Deploy.** Push to `main` or run the workflow. The site goes live at `https://kitchen-calendar.<your-subdomain>.workers.dev`, which is HTTPS, so notifications and keep-screen-on work.
 
 To deploy from your own computer instead, run `npx wrangler login`, then `npm run deploy`. The Worker's name and settings live in `wrangler.jsonc`.
+
+## How phone → tablet works
+
+Phones and the tablet never talk to each other directly. A phone drops its message into a small private **mailbox on your Cloudflare account**. Technically, that's one Durable Object per household, which is included in the free plan and is created automatically when you deploy.
+
+- **The pairing key is a long random secret** made by the tablet and carried in the QR code. Cloudflare only ever stores a SHA-256 hash of it, so one household can never see another's messages.
+- **Messages are checked and size-limited by the Worker.** At most 200 can wait in the mailbox, and they're deleted once the tablet has saved them.
+- **The tablet shares only family names and colours** with the mailbox, so phones can show the "Who" buttons. Nothing else leaves the tablet.
+
+This needs the deployed `https://` site. A phone can't reach `localhost` on the tablet.
 
 ## Linking Google / iCloud / Outlook calendars
 
@@ -118,6 +135,10 @@ src/
     ui.ts                toast, confirm and full-screen alert
     wakelock.ts          Screen Wake Lock handling
     dom.ts, types.ts     helpers + types
-worker/index.ts          Cloudflare Worker: serves dist/ + /api/ics calendar fetcher
+    household.ts         phone pairing (QR) + collecting phone messages
+    phone.ts             the phone "Send to the kitchen" page
+    inbox-types.ts       message types + validation shared with the Worker
+  pages/add.astro        phone page (/add/)
+worker/index.ts          Cloudflare Worker: serves dist/, /api/ics calendar fetcher, phone inbox
 public/                  manifest, service worker, icons, _headers
 ```

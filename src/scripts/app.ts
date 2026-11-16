@@ -27,6 +27,7 @@ import { initNotes, renderLists, renderNotes } from './widgets';
 import { cachedWeather, describeWeather, fetchWeather, searchPlaces, type Forecast } from './weather';
 import { addPhotos, clearPhotos, photoCount } from './photos';
 import { importIcsFile, initFeeds, normaliseUrl, syncFeed } from './feeds';
+import { householdKey, initHousehold } from './household';
 
 /* ------------------------------ state ------------------------------ */
 
@@ -816,6 +817,7 @@ function openSettings(scrollTo?: string) {
   renderPhotoStatus();
   renderWeatherSetting();
   renderFeeds();
+  $('#phones-status').textContent = householdKey() ? 'Phones can send events, shopping, to-dos and notes here.' : 'Not set up yet.';
   settingsDialog.showModal();
   if (scrollTo) setTimeout(() => document.getElementById(scrollTo)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60);
 }
@@ -1072,6 +1074,7 @@ initTimers();
 initBells();
 initNotes();
 initFeeds(S);
+initHousehold();
 
 store.subscribe(() => render());
 tick();

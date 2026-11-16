@@ -316,6 +316,12 @@ const reminderOptions: [string, string][] = [
         </section>
 
         <section class="set-section">
+          <h3>Phones</h3>
+          <p class="muted small">Let the family send events, shopping items, to-dos and notes to this tablet from their phones.</p>
+          <div class="row"><button class="btn primary" type="button" id="btn-phones">📱 Add a phone</button><small id="phones-status" class="muted"></small></div>
+        </section>
+
+        <section class="set-section">
           <h3>Family Bell</h3>
           <div class="row"><button class="btn" type="button" id="btn-bells">Manage bells</button><small id="bells-count" class="muted"></small></div>
         </section>
@@ -342,6 +348,33 @@ const reminderOptions: [string, string][] = [
         </section>
 
         <footer class="sheet-foot">
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Pair a phone -->
+    <dialog id="pair-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2>Add a phone</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <div class="pair">
+          <div id="pair-qr" class="pair-qr"></div>
+          <ol class="pair-steps">
+            <li>Open the <b>camera</b> on your phone and point it at this code.</li>
+            <li>Tap the link that pops up.</li>
+            <li>Add it to your home screen (Share → <b>Add to Home Screen</b> on iPhone, ⋮ → <b>Add to Home screen</b> on Android).</li>
+            <li>Send events, shopping, to-dos and notes — they appear here within 30 seconds.</li>
+          </ol>
+        </div>
+        <p id="pair-warning" class="readonly-note" hidden>This only works on the deployed (https) site — not on a local test address.</p>
+        <small class="muted">Link: <code id="pair-link"></code></small>
+        <footer class="sheet-foot">
+          <button class="btn danger" type="button" id="pair-reset">New code</button>
+          <button class="btn" type="button" id="pair-copy">Copy link</button>
           <span class="spacer"></span>
           <button class="btn primary" type="button" data-close>Done</button>
         </footer>

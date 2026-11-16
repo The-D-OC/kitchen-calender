@@ -1,0 +1,118 @@
+---
+import '../styles/global.css';
+import '../styles/phone.css';
+
+const reminderOptions: [string, string][] = [
+  ['', 'No reminder'],
+  ['0', 'When it starts'],
+  ['10', '10 minutes before'],
+  ['30', '30 minutes before'],
+  ['60', '1 hour before'],
+  ['1440', '1 day before'],
+];
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111318" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Send to Kitchen" />
+    <meta name="robots" content="noindex" />
+    <link rel="manifest" href="/add.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <title>Send to the kitchen calendar</title>
+  </head>
+  <body class="phone">
+    <main class="phone-app">
+      <header class="phone-head">
+        <div>
+          <h1>Send to the kitchen</h1>
+          <button id="who-btn" class="who-btn" type="button" hidden></button>
+        </div>
+        <img src="/icon.svg" alt="" width="44" height="44" />
+      </header>
+
+      <section id="unpaired" class="card" hidden>
+        <h2>Pair this phone first</h2>
+        <p>On the kitchen tablet open <b>⚙ Settings → Phones → Add a phone</b>, then scan the QR code with your phone’s camera.</p>
+      </section>
+
+      <section id="paired" hidden>
+        <div id="kind-seg" class="seg kinds" role="tablist">
+          <button type="button" data-kind="event">📅<span>Event</span></button>
+          <button type="button" data-kind="shopping">🛒<span>Shopping</span></button>
+          <button type="button" data-kind="todo">✅<span>To-do</span></button>
+          <button type="button" data-kind="note">📝<span>Note</span></button>
+        </div>
+
+        <!-- Event -->
+        <form id="form-event" class="card form" data-kind="event" novalidate>
+          <label class="field"><span>What</span><input name="title" required maxlength="80" placeholder="e.g. Dentist" autocomplete="off" enterkeyhint="next" /></label>
+          <div class="field">
+            <span>When</span>
+            <div id="quick-dates" class="quick"></div>
+            <input type="date" name="date" required />
+          </div>
+          <label class="toggle"><input type="checkbox" name="allDay" /> <span>All day</span></label>
+          <div class="row" id="p-times">
+            <label class="field"><span>Starts</span><input type="time" name="start" value="09:00" /></label>
+            <label class="field"><span>Ends</span><input type="time" name="end" /></label>
+          </div>
+          <div class="row" id="p-enddate" hidden>
+            <label class="field"><span>Last day <em>(optional)</em></span><input type="date" name="endDate" /></label>
+          </div>
+          <div class="field"><span>Who <em>(none = whole family)</em></span><div id="p-members" class="pick"></div></div>
+          <details class="more-fields">
+            <summary>Where, reminder &amp; notes</summary>
+            <label class="field"><span>Where</span><input name="location" maxlength="80" autocomplete="off" /></label>
+            <label class="field"><span>Reminder</span><select name="reminder">{reminderOptions.map(([v, l]) => <option value={v}>{l}</option>)}</select></label>
+            <label class="field"><span>Notes</span><textarea name="notes" rows="3" maxlength="500"></textarea></label>
+          </details>
+          <button class="btn primary send" type="submit">Send to calendar</button>
+        </form>
+
+        <!-- Shopping / To-do -->
+        <form id="form-list" class="card form" data-kind="shopping todo" novalidate hidden>
+          <label class="field"><span id="list-label">Add to shopping</span>
+            <textarea name="text" rows="3" maxlength="400" placeholder="milk, bread, eggs"></textarea>
+          </label>
+          <small class="muted">Separate several things with commas or new lines.</small>
+          <div class="field" id="todo-who"><span>For <em>(optional)</em></span><div id="p-todo-members" class="pick"></div></div>
+          <button class="btn primary send" type="submit">Send</button>
+        </form>
+
+        <!-- Note -->
+        <form id="form-note" class="card form" data-kind="note" novalidate hidden>
+          <label class="field"><span>Note</span><textarea name="text" rows="4" maxlength="200" placeholder="Running late — start tea without me!"></textarea></label>
+          <div class="field"><span>For</span><div id="p-note-members" class="pick"></div></div>
+          <button class="btn primary send" type="submit">Stick it on the fridge</button>
+        </form>
+
+        <div id="sent" class="sent" hidden></div>
+        <ul id="history" class="history"></ul>
+      </section>
+    </main>
+
+    <!-- Who are you? -->
+    <dialog id="who-dialog" class="sheet small">
+      <div class="sheet-inner">
+        <h2>Who’s this phone?</h2>
+        <p class="muted small">So the kitchen shows who sent things.</p>
+        <div id="who-list" class="pick big"></div>
+        <label class="field"><span>Or type a name</span><input id="who-other" maxlength="30" autocomplete="off" /></label>
+        <footer class="sheet-foot"><span class="spacer"></span><button class="btn primary" type="button" id="who-save">Done</button></footer>
+      </div>
+    </dialog>
+    <div id="toast" role="status"></div>
+
+    <script>
+      import '../scripts/phone';
+    </script>
+  </body>
+</html>
