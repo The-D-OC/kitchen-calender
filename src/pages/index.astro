@@ -1,0 +1,209 @@
+---
+import '../styles/global.css';
+
+const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const idleOptions: [number, string][] = [
+  [1, '1 minute'],
+  [2, '2 minutes'],
+  [5, '5 minutes'],
+  [10, '10 minutes'],
+  [30, '30 minutes'],
+  [0, 'Never'],
+];
+const repeatOptions: [string, string][] = [
+  ['none', 'Does not repeat'],
+  ['daily', 'Every day'],
+  ['weekly', 'Every week'],
+  ['fortnightly', 'Every 2 weeks'],
+  ['monthly', 'Every month'],
+  ['yearly', 'Every year (birthdays)'],
+];
+const reminderOptions: [string, string][] = [
+  ['', 'No reminder'],
+  ['0', 'When it starts'],
+  ['10', '10 minutes before'],
+  ['30', '30 minutes before'],
+  ['60', '1 hour before'],
+  ['1440', '1 day before'],
+];
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#111318" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Calendar" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <title>Family Calendar</title>
+  </head>
+  <body>
+    <div class="app">
+      <header class="top">
+        <div class="clock">
+          <div id="clock-time" class="time">--:--</div>
+          <div id="clock-date" class="date"></div>
+        </div>
+        <nav id="member-filter" class="members" aria-label="Show or hide family members"></nav>
+        <div class="actions">
+          <button id="btn-members" class="btn" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            Family
+          </button>
+          <button id="btn-settings" class="btn icon" type="button" aria-label="Settings">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="month" aria-label="Month">
+          <div class="month-head">
+            <button id="prev" class="btn icon" type="button" aria-label="Previous month">‹</button>
+            <h1 id="month-title"></h1>
+            <button id="today-btn" class="btn" type="button">Today</button>
+            <button id="next" class="btn icon" type="button" aria-label="Next month">›</button>
+          </div>
+          <div class="weekdays">{weekdays.map((d) => <span>{d}</span>)}</div>
+          <div id="grid" class="grid"></div>
+        </section>
+
+        <aside class="agenda" aria-label="Selected day">
+          <div class="agenda-head">
+            <h2 id="agenda-title"></h2>
+            <button id="add-event" class="btn primary" type="button">+ Add</button>
+          </div>
+          <ul id="agenda-list"></ul>
+        </aside>
+      </main>
+    </div>
+
+    <!-- Event editor -->
+    <dialog id="event-dialog" class="sheet">
+      <form method="dialog" id="event-form">
+        <header class="sheet-head">
+          <h2 id="event-dialog-title">New event</h2>
+          <button class="btn icon ghost" value="cancel" formnovalidate aria-label="Close">✕</button>
+        </header>
+        <label class="field"><span>What</span><input name="title" required placeholder="e.g. Swimming lesson" autocomplete="off" maxlength="80" /></label>
+        <div class="row">
+          <label class="field"><span>Date</span><input type="date" name="date" required /></label>
+          <label class="toggle"><input type="checkbox" name="allDay" /> <span>All day</span></label>
+        </div>
+        <div class="row" id="event-times">
+          <label class="field"><span>Starts</span><input type="time" name="start" /></label>
+          <label class="field"><span>Ends</span><input type="time" name="end" /></label>
+        </div>
+        <div class="field">
+          <span>Who <em>(none picked = whole family)</em></span>
+          <div id="event-members" class="pick"></div>
+        </div>
+        <div class="row">
+          <label class="field"><span>Repeats</span>
+            <select name="repeat">{repeatOptions.map(([v, l]) => <option value={v}>{l}</option>)}</select>
+          </label>
+          <label class="field"><span>Reminder</span>
+            <select name="reminder">{reminderOptions.map(([v, l]) => <option value={v}>{l}</option>)}</select>
+          </label>
+        </div>
+        <label class="field"><span>Notes</span><textarea name="notes" rows="2" placeholder="Bring towel, £3 for snacks…"></textarea></label>
+        <footer class="sheet-foot">
+          <button type="button" id="event-delete" class="btn danger">Delete</button>
+          <span class="spacer"></span>
+          <button class="btn" value="cancel" formnovalidate>Cancel</button>
+          <button class="btn primary" value="save">Save</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <!-- Family members -->
+    <dialog id="members-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2>Family members</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <div id="members-list" class="members-list"></div>
+        <footer class="sheet-foot">
+          <button class="btn" type="button" id="member-add">+ Add person</button>
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Settings -->
+    <dialog id="settings-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2>Settings</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+
+        <div class="row">
+          <label class="field"><span>Screen saver after</span>
+            <select id="set-idle">{idleOptions.map(([v, l]) => <option value={String(v)}>{l}</option>)}</select>
+          </label>
+          <button class="btn" type="button" id="set-saver-now">Preview</button>
+        </div>
+        <label class="toggle"><input type="checkbox" id="set-awake" /> <span>Keep the screen on while the calendar is open</span></label>
+        <small id="wake-status" class="muted"></small>
+
+        <div class="field">
+          <span>Notifications</span>
+          <div class="row">
+            <button class="btn" type="button" id="set-notify">Turn notifications on</button>
+            <button class="btn" type="button" id="set-test">Send a test</button>
+          </div>
+          <small id="notify-status" class="muted"></small>
+        </div>
+
+        <div class="row">
+          <label class="field"><span>Morning summary</span><select id="set-summary"></select></label>
+          <label class="field"><span>Dim screen saver from</span><select id="set-night-start"></select></label>
+          <label class="field"><span>until</span><select id="set-night-end"></select></label>
+        </div>
+
+        <div class="field">
+          <span>Backup</span>
+          <div class="row">
+            <button class="btn" type="button" id="export">Export</button>
+            <button class="btn" type="button" id="import">Import</button>
+            <input type="file" id="import-file" accept="application/json,.json" hidden />
+          </div>
+          <small class="muted">Everything is saved on this tablet. Export now and then so you have a copy.</small>
+        </div>
+
+        <footer class="sheet-foot">
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Confirm -->
+    <dialog id="confirm-dialog" class="sheet small">
+      <form method="dialog" class="sheet-inner">
+        <p id="confirm-text" class="confirm-text"></p>
+        <footer class="sheet-foot">
+          <span class="spacer"></span>
+          <button class="btn" value="cancel">Cancel</button>
+          <button class="btn danger" value="ok" id="confirm-ok">OK</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <div id="screensaver" class="saver" aria-live="polite"></div>
+    <div id="toast" role="status"></div>
+
+    <script>
+      import '../scripts/app';
+    </script>
+  </body>
+</html>
