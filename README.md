@@ -58,10 +58,10 @@ One-time setup:
 1. **Start a new Worker.** In the Cloudflare dashboard, go to **Workers & Pages → Create application → Import a repository**.
 2. **Choose the repo.** Pick your GitHub account, then this repo. If asked, allow Cloudflare's GitHub app access to **only this repository**.
 3. **Check the settings:**
-   - Project name: `kitchen-calendar`. This must match `name` in `wrangler.jsonc`.
+   - Project name: `kitchen-calender`. This must match `name` in `wrangler.jsonc`.
    - Build command: `npm run build`
    - Deploy command: `npx wrangler deploy` (the default)
-4. **Deploy.** Select **Save and Deploy**. The site goes live at `https://kitchen-calendar.<your-subdomain>.workers.dev`.
+4. **Deploy.** Select **Save and Deploy**. The site goes live at `https://kitchen-calender.<your-subdomain>.workers.dev`.
 
 After that, every push to `main` deploys automatically. The GitHub Action in `.github/workflows/build.yml` only checks that the code builds.
 

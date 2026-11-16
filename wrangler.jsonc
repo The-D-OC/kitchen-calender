@@ -2,7 +2,7 @@
 // Deploy with:  npm run deploy   (GitHub Actions does this on every push to main)
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "kitchen-calendar",
+  "name": "kitchen-calender",
   "main": "worker/index.ts",
   "compatibility_date": "2026-11-01",
   "assets": {
