@@ -49,20 +49,23 @@ npm run preview
 
 The build makes `dist/index.html` with all CSS and JS inlined, plus the icons, manifest and `sw.js`. You can host `dist/` anywhere static: Netlify, Vercel, GitHub Pages, Cloudflare Pages, or a Raspberry Pi with Caddy.
 
-## Deploy to Cloudflare (GitHub Actions)
+## Deploy to Cloudflare (no secrets needed)
 
-Every push to `main` builds the site and deploys it to Cloudflare Workers using `.github/workflows/deploy.yml`. You can also deploy on demand: go to the **Actions** tab, pick **Deploy to Cloudflare**, then **Run workflow**.
+Cloudflare builds and deploys the site itself every time you push to `main`, using **Workers Builds**. Nothing needs to be stored in GitHub.
 
 One-time setup:
 
-1. **Create an API token.** In the Cloudflare dashboard, go to **My Profile → API Tokens → Create Token** and use the **Edit Cloudflare Workers** template.
-2. **Find your Account ID.** It's on the right of any Workers & Pages page in the Cloudflare dashboard.
-3. **Add both as secrets.** In GitHub, go to **Settings → Secrets and variables → Actions → New repository secret**:
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
-4. **Deploy.** Push to `main` or run the workflow. The site goes live at `https://kitchen-calendar.<your-subdomain>.workers.dev`, which is HTTPS, so notifications and keep-screen-on work.
+1. **Start a new Worker.** In the Cloudflare dashboard, go to **Workers & Pages → Create application → Import a repository**.
+2. **Choose the repo.** Pick your GitHub account, then this repo. If asked, allow Cloudflare's GitHub app access to **only this repository**.
+3. **Check the settings:**
+   - Project name: `kitchen-calendar`. This must match `name` in `wrangler.jsonc`.
+   - Build command: `npm run build`
+   - Deploy command: `npx wrangler deploy` (the default)
+4. **Deploy.** Select **Save and Deploy**. The site goes live at `https://kitchen-calendar.<your-subdomain>.workers.dev`.
 
-To deploy from your own computer instead, run `npx wrangler login`, then `npm run deploy`. The Worker's name and settings live in `wrangler.jsonc`.
+After that, every push to `main` deploys automatically. The GitHub Action in `.github/workflows/build.yml` only checks that the code builds.
+
+To deploy from your own computer instead, run `npx wrangler login`, then `npm run deploy`.
 
 ## How phone → tablet works
 
