@@ -65,6 +65,14 @@ function normalise(saved: Partial<State> & Record<string, unknown>): State {
   };
 }
 
+/** True when this browser had no saved calendar at start-up (new or wiped tablet) */
+export let freshInstall = false;
+try {
+  freshInstall = !localStorage.getItem(KEY);
+} catch {
+  freshInstall = false;
+}
+
 function load(): State {
   try {
     const raw = localStorage.getItem(KEY);

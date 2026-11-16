@@ -1,6 +1,7 @@
 import type { HouseholdProfile, InboxMessage } from './inbox-types';
 import { $, avatar, cls, h } from './dom';
 import { LOCALE, addDays, fromKey, toKey } from './dates';
+import { qrSvg } from './qr';
 
 /* "Send to the kitchen" — the page family members use on their phones. */
 
@@ -352,6 +353,27 @@ function applyShare() {
   }
   history.replaceState(null, '', location.pathname + location.hash);
 }
+
+/* ---------- help restore a wiped tablet ---------- */
+
+$('#show-recovery').addEventListener('click', () => {
+  if (!key) return;
+  const link = `${location.origin}/#restore=${key}`;
+  $('#phone-recovery-qr').replaceChildren(qrSvg(link));
+  $('#phone-recovery-share').onclick = async () => {
+    try {
+      if (navigator.share) await navigator.share({ title: 'Kitchen calendar recovery link', url: link });
+      else {
+        await navigator.clipboard.writeText(link);
+        status('Recovery link copied — paste it on the tablet.');
+      }
+    } catch {
+      /* share cancelled */
+    }
+  };
+  $('#phone-recovery-close').onclick = () => $<HTMLDialogElement>('#phone-recovery').close();
+  $<HTMLDialogElement>('#phone-recovery').showModal();
+});
 
 /* ---------- start ---------- */
 

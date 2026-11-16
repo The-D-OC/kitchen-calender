@@ -337,14 +337,23 @@ const reminderOptions: [string, string][] = [
           <small id="notify-status" class="muted"></small>
         </section>
 
-        <section class="set-section">
+        <section class="set-section" id="settings-backup">
           <h3>Backup</h3>
+          <p class="muted small">Everything is saved on this tablet the moment you change it, so refreshing or closing the app is safe. A copy is also kept in the cloud automatically, in case the tablet is wiped or replaced. Photos stay on the tablet only.</p>
           <div class="row">
-            <button class="btn" type="button" id="export">Export</button>
-            <button class="btn" type="button" id="import">Import</button>
+            <button class="btn primary" type="button" id="btn-recovery">🔑 Recovery link</button>
+            <button class="btn" type="button" id="backup-now">Back up now</button>
+          </div>
+          <small id="backup-status" class="muted"></small>
+          <div class="row">
+            <label class="field"><span>Restore from a recovery link</span><input id="restore-link" placeholder="Paste the recovery link" autocomplete="off" /></label>
+            <button class="btn" type="button" id="settings-restore">Restore</button>
+          </div>
+          <div class="row">
+            <button class="btn small" type="button" id="export">Export to a file</button>
+            <button class="btn small" type="button" id="import">Import a file</button>
             <input type="file" id="import-file" accept="application/json,.json" hidden />
           </div>
-          <small class="muted">Everything is saved on this tablet. Export now and then so you have a copy.</small>
         </section>
 
         <footer class="sheet-foot">
@@ -377,6 +386,48 @@ const reminderOptions: [string, string][] = [
           <button class="btn" type="button" id="pair-copy">Copy link</button>
           <span class="spacer"></span>
           <button class="btn primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- Recovery link -->
+    <dialog id="recovery-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head">
+          <h2>Recovery link</h2>
+          <button class="btn icon ghost" type="button" data-close aria-label="Close">✕</button>
+        </header>
+        <div class="pair">
+          <div id="recovery-qr" class="pair-qr"></div>
+          <ol class="pair-steps">
+            <li><b>Take a photo of this code</b> with your phone, or copy the link and keep it somewhere safe (e.g. your notes or password manager).</li>
+            <li>If the tablet is ever wiped or replaced, open the link on the new tablet and tap <b>Restore</b>.</li>
+            <li>Paired phones can also show this link: on the phone page, tap <b>Kitchen screen wiped?</b></li>
+          </ol>
+        </div>
+        <p class="readonly-note">Keep it private — anyone with this link can see and restore your family calendar.</p>
+        <small class="muted"><code id="recovery-link"></code></small>
+        <footer class="sheet-foot">
+          <button class="btn" type="button" id="recovery-copy">Copy link</button>
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" data-close>Done</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <!-- First run on a new / wiped tablet -->
+    <dialog id="welcome-dialog" class="sheet">
+      <div class="sheet-inner">
+        <header class="sheet-head"><h2>Welcome 👋</h2></header>
+        <p class="muted">Setting up a new kitchen screen, or bringing your calendar back?</p>
+        <div class="row">
+          <label class="field"><span>Recovery link</span><input id="welcome-link" placeholder="Paste the recovery link" autocomplete="off" /></label>
+          <button class="btn primary" type="button" id="welcome-restore">Restore</button>
+        </div>
+        <small class="muted">No link to hand? On a paired phone, open “Send to the kitchen” and tap <b>Kitchen screen wiped?</b>, then scan its QR code with this tablet’s camera.</small>
+        <footer class="sheet-foot">
+          <span class="spacer"></span>
+          <button class="btn" type="button" id="welcome-fresh">Start fresh</button>
         </footer>
       </div>
     </dialog>

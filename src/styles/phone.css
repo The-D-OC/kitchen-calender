@@ -32,3 +32,5 @@ html:has(body.phone), body.phone { overflow: auto; height: auto; min-height: 100
 .history li small { color: var(--muted); white-space: nowrap; }
 body.phone dialog.sheet { width: min(460px, 94vw); }
 body.phone input:not([type='checkbox']):not([type='color']), body.phone select, body.phone textarea { font-size: 17px; }
+.wiped { align-self: center; color: var(--muted); margin-top: 8px; }
+#phone-recovery .pair-qr { max-width: 260px; margin: 0 auto; width: 100%; }

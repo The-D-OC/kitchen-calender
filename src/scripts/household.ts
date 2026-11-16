@@ -1,4 +1,4 @@
-import qrcode from 'qrcode-generator';
+import { qrSvg } from './qr';
 import type { CalEvent } from './types';
 import type { HouseholdProfile, InboxMessage } from './inbox-types';
 import { NOTE_COLOURS, store, uid } from './store';
@@ -26,6 +26,23 @@ export function householdKey(): string | null {
   }
 }
 
+export function setHouseholdKey(key: string) {
+  localStorage.setItem(KEY_STORE, key);
+  lastProfile = '';
+}
+
+/** Make sure there is a household key (used for phones and the cloud backup) */
+export function ensureHouseholdKey(): string {
+  let key = householdKey();
+  if (!key) {
+    key = newKey();
+    localStorage.setItem(KEY_STORE, key);
+  }
+  return key;
+}
+
+export const KEY_RE = /^[A-Za-z0-9_-]{32,64}$/;
+
 function newKey(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(30));
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -48,6 +65,8 @@ async function api(path: string, init: RequestInit = {}) {
 /* ---------- publish family names/colours so phones can show them ---------- */
 
 let lastProfile = '';
+/** Called when 'New code' replaces the key (the backup moves to the new key) */
+export const onKeyChange: (() => void)[] = [];
 async function publishProfile(force = false) {
   if (!householdKey()) return;
   const profile: Omit<HouseholdProfile, 'updatedAt'> = { members: store.get().members.map(({ id, name, color }) => ({ id, name, color })) };
@@ -140,40 +159,9 @@ export async function checkInbox(): Promise<number> {
 
 /* ---------- pairing dialog ---------- */
 
-function qrSvg(text: string): SVGSVGElement {
-  const qr = qrcode(0, 'M');
-  qr.addData(text);
-  qr.make();
-  const n = qr.getModuleCount();
-  const NS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(NS, 'svg');
-  const quiet = 3;
-  svg.setAttribute('viewBox', `${-quiet} ${-quiet} ${n + quiet * 2} ${n + quiet * 2}`);
-  svg.setAttribute('shape-rendering', 'crispEdges');
-  svg.setAttribute('class', 'qr');
-  const bg = document.createElementNS(NS, 'rect');
-  bg.setAttribute('x', String(-quiet));
-  bg.setAttribute('y', String(-quiet));
-  bg.setAttribute('width', String(n + quiet * 2));
-  bg.setAttribute('height', String(n + quiet * 2));
-  bg.setAttribute('fill', '#fff');
-  svg.append(bg);
-  let d = '';
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c} ${r}h1v1h-1z`;
-  const path = document.createElementNS(NS, 'path');
-  path.setAttribute('d', d);
-  path.setAttribute('fill', '#111318');
-  svg.append(path);
-  return svg;
-}
-
 function renderPairing() {
-  let key = householdKey();
-  if (!key) {
-    key = newKey();
-    localStorage.setItem(KEY_STORE, key);
-    publishProfile(true);
-  }
+  const key = ensureHouseholdKey();
+  publishProfile(true);
   const link = phoneLink(key);
   $('#pair-qr').replaceChildren(qrSvg(link));
   $('#pair-link').textContent = link.replace(/#k=.*/, '#k=…');
@@ -198,9 +186,9 @@ export function initHousehold() {
   });
   $('#pair-reset').addEventListener('click', async () => {
     if (!(await ask('Make a new code? Phones already paired will stop working until they scan the new QR code.', 'New code'))) return;
-    localStorage.setItem(KEY_STORE, newKey());
-    lastProfile = '';
+    setHouseholdKey(newKey());
     renderPairing();
+    onKeyChange.forEach((f) => f());
   });
 
   store.subscribe(() => publishProfile());

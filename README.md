@@ -35,7 +35,8 @@ Inspired by the Amazon Echo Show family hub and Google Nest Hub, built for a tou
 - **Screen saver and photo frame.** A big clock, weather, a pulsing **"N things on today"** banner, today's events, running timers and sticky notes. They're shown over a slideshow of your family photos, which are stored on the tablet. It dims at night and drifts slowly to protect the screen.
 - **Screen-off notification.** When the screen turns off or the tablet locks, you get a system notification listing what's still on today, if anything is. There's also a morning summary, and notifications for reminders, timers and bells.
 - **Keep the screen on.** This uses the Screen Wake Lock API.
-- **Backup.** Export to and import from a JSON file.
+- **Safe to refresh or close.** Every change is saved on the tablet the moment it happens.
+- **Automatic cloud backup.** A copy is saved to your Cloudflare account a few seconds after every change. If the tablet is wiped or replaced, open the **recovery link** (⚙ Settings → Backup) on the new tablet and tap Restore. Any paired phone can also show the link: tap *Kitchen screen wiped?* on the phone page. Photos stay on the tablet. You can also export and import a JSON file.
 - **Installable.** You can add it to the home screen. It then opens full-screen in landscape like an app.
 
 ## Run it
@@ -73,7 +74,7 @@ Phones and the tablet never talk to each other directly. A phone drops its messa
 
 - **The pairing key is a long random secret** made by the tablet and carried in the QR code. Cloudflare only ever stores a SHA-256 hash of it, so one household can never see another's messages.
 - **Messages are checked and size-limited by the Worker.** At most 200 can wait in the mailbox, and they're deleted once the tablet has saved them.
-- **The tablet shares only family names and colours** with the mailbox, so phones can show the "Who" buttons. Nothing else leaves the tablet.
+- **What the tablet shares.** It sends family names and colours to the mailbox so phones can show the "Who" buttons. It also sends its automatic backup. Both are stored under the same private key and only that key can read them, so keep the recovery link private.
 
 This needs the deployed `https://` site. A phone can't reach `localhost` on the tablet.
 
@@ -112,7 +113,7 @@ The easiest options:
 
 ## Notes and limits
 
-- **Data lives in this browser's storage on this tablet.** It doesn't sync to phones, although linked calendars pull events in from Google, iCloud or Outlook. Use Export now and then to keep a backup. Syncing would need a small backend (for example Supabase or a JSON file on a server).
+- **Data lives on the tablet, with an automatic cloud backup** in your Cloudflare account. Phones can send things in, but they don't show the whole calendar. Use one tablet per recovery link: two tablets sharing a link would overwrite each other's backup. Use Export now and then to keep a backup. Syncing would need a small backend (for example Supabase or a JSON file on a server).
 - **Timing while the screen is off.** Browsers throttle or pause pages while the screen is off. The "screen turned off" notification fires reliably at the moment the screen goes off. Reminders that fall due while the screen is *off* may be delayed until it wakes. With "Keep the screen on" enabled, the page stays active and reminders fire on time.
 - The week starts on Monday and times are 24-hour (en-GB). Change `LOCALE` in `src/scripts/dates.ts` and the `offset` calculation in `renderGrid` if you want otherwise.
 
@@ -139,6 +140,8 @@ src/
     wakelock.ts          Screen Wake Lock handling
     dom.ts, types.ts     helpers + types
     household.ts         phone pairing (QR) + collecting phone messages
+    backup.ts            automatic cloud backup + restore / recovery link
+    qr.ts                QR code renderer
     phone.ts             the phone "Send to the kitchen" page
     inbox-types.ts       message types + validation shared with the Worker
   pages/add.astro        phone page (/add/)

@@ -96,6 +96,7 @@ const reminderOptions: [string, string][] = [
 
         <div id="sent" class="sent" hidden></div>
         <ul id="history" class="history"></ul>
+        <button id="show-recovery" class="btn ghost small wiped" type="button">Kitchen screen wiped? Restore it</button>
       </section>
     </main>
 
@@ -107,6 +108,18 @@ const reminderOptions: [string, string][] = [
         <div id="who-list" class="pick big"></div>
         <label class="field"><span>Or type a name</span><input id="who-other" maxlength="30" autocomplete="off" /></label>
         <footer class="sheet-foot"><span class="spacer"></span><button class="btn primary" type="button" id="who-save">Done</button></footer>
+      </div>
+    </dialog>
+    <dialog id="phone-recovery" class="sheet small">
+      <div class="sheet-inner">
+        <h2>Bring the kitchen screen back</h2>
+        <p class="muted small">Scan this with the tablet’s camera (or send the link to the tablet), then tap <b>Restore</b>. Everything comes back from the automatic backup.</p>
+        <div id="phone-recovery-qr" class="pair-qr"></div>
+        <footer class="sheet-foot">
+          <button class="btn" type="button" id="phone-recovery-share">Share link</button>
+          <span class="spacer"></span>
+          <button class="btn primary" type="button" id="phone-recovery-close">Done</button>
+        </footer>
       </div>
     </dialog>
     <div id="toast" role="status"></div>

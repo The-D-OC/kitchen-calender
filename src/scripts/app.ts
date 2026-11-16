@@ -28,6 +28,7 @@ import { cachedWeather, describeWeather, fetchWeather, searchPlaces, type Foreca
 import { addPhotos, clearPhotos, photoCount } from './photos';
 import { importIcsFile, initFeeds, normaliseUrl, syncFeed } from './feeds';
 import { householdKey, initHousehold } from './household';
+import { backupStatusText, initBackup } from './backup';
 
 /* ------------------------------ state ------------------------------ */
 
@@ -817,6 +818,7 @@ function openSettings(scrollTo?: string) {
   renderPhotoStatus();
   renderWeatherSetting();
   renderFeeds();
+  $('#backup-status').textContent = backupStatusText();
   $('#phones-status').textContent = householdKey() ? 'Phones can send events, shopping, to-dos and notes here.' : 'Not set up yet.';
   settingsDialog.showModal();
   if (scrollTo) setTimeout(() => document.getElementById(scrollTo)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60);
@@ -1075,6 +1077,7 @@ initBells();
 initNotes();
 initFeeds(S);
 initHousehold();
+initBackup();
 
 store.subscribe(() => render());
 tick();

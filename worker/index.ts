@@ -8,6 +8,8 @@
 //   POST /api/inbox/ack            tablet confirms it saved them   { keys: [...] }
 //   GET  /api/profile              phone reads family names + colours
 //   PUT  /api/profile              tablet publishes family names + colours
+//   PUT  /api/state                tablet backs up its whole calendar (automatic)
+//   GET  /api/state                restore that backup onto a new/wiped tablet
 //
 // Each household gets its own Durable Object, named by a SHA-256 hash of its
 // secret key, so the key itself is never stored and households can't see each other.
@@ -18,6 +20,7 @@ import { KEY_PATTERN, cleanMessage, cleanProfile } from '../src/scripts/inbox-ty
 interface DOStorage {
   get<T>(key: string): Promise<T | undefined>;
   put(key: string, value: unknown): Promise<void>;
+  put(entries: Record<string, unknown>): Promise<void>;
   delete(keys: string[]): Promise<number>;
   list<T>(opts: { prefix: string; limit?: number }): Promise<Map<string, T>>;
 }
@@ -39,6 +42,8 @@ interface Env {
 const MAX_BYTES = 5_000_000;
 const MAX_QUEUED = 200;
 const MAX_BODY = 4_000;
+const MAX_STATE = 3_000_000; // whole-calendar backup (photos are not included)
+const CHUNK = 100_000; // stored in pieces to stay well under per-value limits
 
 const reply = (body: string, status = 200, type = 'text/plain; charset=utf-8') =>
   new Response(body, { status, headers: { 'content-type': type, 'cache-control': 'no-store' } });
@@ -152,6 +157,40 @@ export class Household {
       return json({ ok: true });
     }
 
+    if (pathname === '/state' && request.method === 'PUT') {
+      const text = await request.text();
+      if (text.length > MAX_STATE) return reply('Backup too large', 413);
+      try {
+        const data = JSON.parse(text);
+        if (!Array.isArray(data?.members) || !Array.isArray(data?.events)) throw new Error();
+      } catch {
+        return reply('That is not a calendar backup', 400);
+      }
+      const old = (await storage.get<{ chunks: number }>('state:meta'))?.chunks ?? 0;
+      const chunks = Math.max(1, Math.ceil(text.length / CHUNK));
+      const entries: Record<string, unknown> = {};
+      for (let i = 0; i < chunks; i++) entries[`state:c:${String(i).padStart(3, '0')}`] = text.slice(i * CHUNK, (i + 1) * CHUNK);
+      const savedAt = Date.now();
+      entries['state:meta'] = { chunks, savedAt, bytes: text.length };
+      await storage.put(entries);
+      const stale = [];
+      for (let i = chunks; i < old; i++) stale.push(`state:c:${String(i).padStart(3, '0')}`);
+      if (stale.length) await storage.delete(stale);
+      return json({ ok: true, savedAt });
+    }
+
+    if (pathname === '/state' && request.method === 'GET') {
+      const meta = await storage.get<{ chunks: number; savedAt: number }>('state:meta');
+      if (!meta) return reply('No backup yet', 404);
+      const parts = await storage.list<string>({ prefix: 'state:c:' });
+      const text = [...parts.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(0, meta.chunks)
+        .map(([, v]) => v)
+        .join('');
+      return new Response(text, { headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-saved-at': String(meta.savedAt) } });
+    }
+
     return reply('Not found', 404);
   }
 }
@@ -171,7 +210,7 @@ export default {
       if (request.method !== 'GET') return reply('Method not allowed', 405);
       return proxyCalendar(url);
     }
-    if (url.pathname === '/api/inbox' || url.pathname === '/api/inbox/ack' || url.pathname === '/api/profile') {
+    if (['/api/inbox', '/api/inbox/ack', '/api/profile', '/api/state'].includes(url.pathname)) {
       return household(request, url, env);
     }
     if (url.pathname.startsWith('/api/')) return reply('Not found', 404);
