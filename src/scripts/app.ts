@@ -29,15 +29,16 @@ import { addPhotos, clearPhotos, photoCount } from './photos';
 import { importIcsFile, initFeeds, normaliseUrl, syncFeed } from './feeds';
 import { householdKey, initHousehold } from './household';
 import { backupStatusText, initBackup } from './backup';
-import { countdownChip, initCountdowns, openCountdowns, upcoming } from './countdowns';
-import { binIcon, binLabel, binNoticeEl, binsOn, initBins, openBins } from './bins';
+import { countdownChip, countdownLabel, initCountdowns, openCountdowns, upcoming } from './countdowns';
+import { binIcon, binLabel, binNoticeEl, binsOn, initBins, nextCollection, openBins } from './bins';
 
 /* ------------------------------ state ------------------------------ */
 
 let viewMonth = startOfMonth(new Date());
 let selected = toKey(new Date());
 let todayKey = selected;
-let sideTab: 'day' | 'lists' | 'notes' = 'day';
+type Screen = 'today' | 'calendar' | 'lists' | 'notes';
+let screen: Screen = 'today';
 const hiddenMembers = new Set<string>(); // tapped-off in the filter bar
 
 const S = () => store.get();
@@ -67,8 +68,11 @@ function tick() {
     render();
   } else {
     renderNextUp();
-    renderAgendaStatus();
-    renderSideTop();
+    if (screen === 'today') renderToday();
+    if (screen === 'calendar') {
+      renderAgendaStatus();
+      renderSideTop();
+    }
   }
 }
 
@@ -207,14 +211,178 @@ function openWeather() {
 function render() {
   renderFilter();
   renderNextUp();
-  renderCalendar();
-  renderSide();
+  renderScreen();
   saver.refresh();
+}
+
+/** Show one screen (Today / calendar / lists / notes) and draw it */
+function renderScreen() {
+  const view = S().settings.view;
+  const navKey = screen === 'calendar' ? view : screen;
+  const s = S();
+  const counts: Record<string, number> = { lists: s.items.filter((i) => !i.done).length, notes: s.notes.length };
+  for (const b of document.querySelectorAll<HTMLButtonElement>('#screen-nav button')) {
+    const k = b.dataset.screen!;
+    b.classList.toggle('on', k === navKey);
+    b.setAttribute('aria-current', k === navKey ? 'page' : 'false');
+    b.replaceChildren(b.dataset.label ?? (b.dataset.label = b.textContent ?? ''), ...(counts[k] ? [h('span', { class: 'badge' }, String(counts[k]))] : []));
+  }
+  for (const id of ['today', 'calendar', 'lists', 'notes'] as Screen[]) $(`#screen-${id}`).hidden = id !== screen;
+  if (screen === 'today') renderToday();
+  else if (screen === 'calendar') {
+    renderCalendar();
+    renderSide();
+  } else if (screen === 'lists') renderLists($('#lists-body'));
+  else renderNotes($('#notes-body'));
+}
+
+export function goTo(next: Screen | 'week' | 'month') {
+  if (next === 'week' || next === 'month') {
+    screen = 'calendar';
+    if (S().settings.view !== next) {
+      store.update((st) => (st.settings.view = next)); // re-renders
+      return;
+    }
+  } else screen = next;
+  render();
+}
+
+/* ------------------------------ Today home ------------------------------ */
+
+const shade = (c: string) => `color-mix(in srgb, ${c} 72%, #1c1a16)`;
+
+function todayRow(e: CalEvent, now: Date, nextId?: string) {
+  const past = endOf(e, todayKey) <= now;
+  const until = !past && !e.allDay && e.start ? startOf(e, todayKey).getTime() - now.getTime() : 0;
+  const sub = past
+    ? 'Done'
+    : [e.id === nextId && until > 0 ? untilLabel(until) : '', e.location, e.notes?.split('\n')[0]].filter(Boolean).join(' · ');
+  return h(
+    'li',
+    {},
+    h(
+      'button',
+      { type: 'button', class: cls('trow', past && 'past', e.allDay && 'allday'), style: `--c:${colorOf(e)};--deep:${shade(colorOf(e))}`, onclick: () => openEvent(e) },
+      h('span', { class: 'ttime' }, e.allDay ? 'All day' : (e.start ?? '')),
+      h('span', { class: 'tbody' }, h('span', { class: 'ttitle' }, e.title), sub ? h('span', { class: 'tsub' }, sub) : null),
+      h('span', { class: 'who' }, ...membersOf(e).map((m) => avatar(m, 36))),
+    ),
+  );
+}
+
+function renderToday() {
+  const now = new Date();
+  const evs = visibleOn(todayKey);
+  const left = evs.filter((e) => endOf(e, todayKey) > now);
+  const next = left.find((e) => !e.allDay && e.start);
+  $('#today-meta').textContent = evs.length
+    ? `${evs.length} ${evs.length === 1 ? 'thing' : 'things'} · ${left.length ? `${left.length} still to come` : 'all done'}`
+    : '';
+  $('#today-list').replaceChildren(
+    ...(evs.length
+      ? evs.map((e) => todayRow(e, now, next?.id))
+      : [
+          h(
+            'li',
+            { class: 'empty' },
+            h('p', {}, 'Nothing on today.'),
+            h('button', { type: 'button', class: 'btn', onclick: () => openEvent(undefined, todayKey) }, '+ Add something'),
+          ),
+        ]),
+  );
+
+  const tk = toKey(addDays(now, 1));
+  $('#tomorrow-date').textContent = fromKey(tk).toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric' });
+  const tev = visibleOn(tk);
+  $('#tomorrow-list').replaceChildren(
+    ...(tev.length
+      ? tev.slice(0, 5).map((e) =>
+          h(
+            'li',
+            {},
+            h(
+              'button',
+              { type: 'button', class: 'trow compact', style: `--c:${colorOf(e)}`, onclick: () => openEvent(e) },
+              h('span', { class: 'tbar' }),
+              h('span', { class: 'ttime' }, e.allDay ? 'All day' : (e.start ?? '')),
+              h('span', { class: 'ttitle' }, e.title),
+            ),
+          ),
+        )
+      : [h('li', { class: 'muted-row' }, 'Nothing planned yet.')]),
+    ...(tev.length > 5 ? [h('li', { class: 'muted-row' }, `+${tev.length - 5} more`)] : []),
+  );
+
+  // Notes on the fridge
+  const notes = [...S().notes].sort((a, b) => b.createdAt - a.createdAt).slice(0, 2);
+  const fridge = $('#today-notes');
+  fridge.onclick = () => goTo('notes');
+  fridge.replaceChildren(
+    h('span', { class: 'tile-label' }, 'Notes on the fridge'),
+    ...(notes.length
+      ? notes.map((n) => {
+          const m = n.memberId ? memberById(n.memberId) : undefined;
+          return h('span', { class: 'fridge-note' }, n.text, m ? h('i', {}, ` — for ${m.name}`) : null);
+        })
+      : [h('span', { class: 'fridge-note muted' }, 'Leave a note for the family…')]),
+  );
+
+  renderTodayAside();
+}
+
+function renderTodayAside() {
+  const s = S();
+  const tiles: HTMLElement[] = [];
+
+  // Bins: the reminder when it's due, otherwise when the next one is
+  const notice = binNoticeEl(true);
+  if (notice) tiles.push(notice);
+  else if (s.bins.length) {
+    const next = s.bins
+      .map((b) => ({ b, k: nextCollection(b, toKey(addDays(new Date(), 1))) }))
+      .sort((x, y) => x.k.localeCompare(y.k));
+    const k = next[0].k;
+    const due = next.filter((n) => n.k === k).map((n) => n.b);
+    tiles.push(
+      h(
+        'button',
+        { type: 'button', class: 'tile bin-tile', onclick: openBins },
+        h('span', { class: 'bin-icons' }, ...due.map((b) => binIcon(b.color, 30))),
+        h('span', {}, h('b', {}, `Next bins: ${fromKey(k).toLocaleDateString(LOCALE, { weekday: 'long' })}`), h('small', {}, due.map((b) => b.name).join(' + '))),
+      ),
+    );
+  }
+
+  // Countdowns
+  const cds = upcoming().slice(0, 3);
+  tiles.push(
+    h(
+      'button',
+      { type: 'button', class: 'tile cd-tile', onclick: openCountdowns },
+      h('span', { class: 'tile-label' }, 'Countdowns'),
+      ...(cds.length
+        ? cds.map((c) => h('span', { class: 'cd-line' }, h('span', { class: 'cd-emoji' }, c.emoji), h('b', {}, countdownLabel(c)), h('span', {}, c.title)))
+        : [h('span', { class: 'muted' }, 'Add one — Christmas, holidays, birthdays')]),
+    ),
+  );
+
+  // Shopping + to-do
+  const shop = s.items.filter((i) => i.list === 'shopping' && !i.done);
+  const todo = s.items.filter((i) => i.list === 'todo' && !i.done);
+  tiles.push(
+    h(
+      'button',
+      { type: 'button', class: 'tile list-tile', onclick: () => goTo('lists') },
+      h('span', { class: 'tile-label' }, `Shopping${shop.length ? ` · ${shop.length}` : ''}`),
+      h('span', { class: 'list-preview' }, shop.length ? shop.slice(0, 8).map((i) => i.text).join(' · ') : 'Nothing on the list'),
+      ...(todo.length ? [h('span', { class: 'tile-label', style: 'margin-top:10px' }, `To-do · ${todo.length}`), h('span', { class: 'list-preview' }, todo.slice(0, 4).map((i) => i.text).join(' · '))] : []),
+    ),
+  );
+  $('#today-aside').replaceChildren(...tiles);
 }
 
 function renderCalendar() {
   const view = S().settings.view;
-  for (const b of document.querySelectorAll<HTMLButtonElement>('#view-seg button')) b.classList.toggle('on', b.dataset.view === view);
   $('#month-wrap').hidden = view !== 'month';
   $('#week').hidden = view !== 'week';
   if (view === 'month') renderGrid();
@@ -335,9 +503,8 @@ function renderWeek() {
 }
 
 function onDayTap(key: string) {
-  if (key === selected && sideTab === 'day') return openEvent(undefined, key); // second tap = add
+  if (key === selected) return openEvent(undefined, key); // second tap = add
   selected = key;
-  sideTab = 'day';
   const d = fromKey(key);
   if (d.getMonth() !== viewMonth.getMonth() || d.getFullYear() !== viewMonth.getFullYear()) viewMonth = startOfMonth(d);
   render();
@@ -359,35 +526,7 @@ function renderSideTop() {
 
 function renderSide() {
   renderSideTop();
-  const s = S();
-  const listCount = s.items.filter((i) => !i.done).length;
-  const tabs: [typeof sideTab, string, number][] = [
-    ['day', 'Day', 0],
-    ['lists', 'Lists', listCount],
-    ['notes', 'Notes', s.notes.length],
-  ];
-  $('#side-tabs').replaceChildren(
-    ...tabs.map(([id, label, n]) =>
-      h(
-        'button',
-        {
-          type: 'button',
-          class: cls(sideTab === id && 'on'),
-          onclick: () => {
-            sideTab = id;
-            renderSide();
-          },
-        },
-        label,
-        n ? h('span', { class: 'badge' }, String(n)) : null,
-      ),
-    ),
-  );
-  const body = $('#side-body');
-  body.dataset.tab = sideTab;
-  if (sideTab === 'day') renderAgenda(body);
-  else if (sideTab === 'lists') renderLists(body);
-  else renderNotes(body);
+  renderAgenda($('#side-body'));
 }
 
 function renderAgenda(root: HTMLElement) {
@@ -461,7 +600,7 @@ function renderAgenda(root: HTMLElement) {
 
 /** Fade finished items without rebuilding the list every tick */
 function renderAgendaStatus() {
-  if (selected !== todayKey || sideTab !== 'day') return;
+  if (selected !== todayKey || screen !== 'calendar') return;
   const now = new Date();
   for (const btn of document.querySelectorAll<HTMLElement>('#agenda-list .item')) {
     const e = S().events.find((x) => x.id === btn.dataset.id);
@@ -593,7 +732,6 @@ async function saveEvent() {
   if (!editing) {
     selected = data.date;
     viewMonth = startOfMonth(fromKey(data.date));
-    sideTab = 'day';
     render();
   }
   if (data.reminder != null && !S().settings.notifications && permission() !== 'unsupported') {
@@ -1048,14 +1186,18 @@ $('#next').addEventListener('click', () => step(1));
 $('#today-btn').addEventListener('click', () => {
   selected = todayKey;
   viewMonth = startOfMonth(new Date());
-  sideTab = 'day';
   render();
 });
-for (const b of document.querySelectorAll<HTMLButtonElement>('#view-seg button')) {
+for (const b of document.querySelectorAll<HTMLButtonElement>('#screen-nav button')) {
   b.addEventListener('click', () => {
-    store.update((s) => (s.settings.view = b.dataset.view as 'month' | 'week'));
+    if (b.dataset.screen === 'week' || b.dataset.screen === 'month') {
+      selected = todayKey;
+      viewMonth = startOfMonth(new Date());
+    }
+    goTo(b.dataset.screen as Screen | 'week' | 'month');
   });
 }
+$('#nav-add').addEventListener('click', () => openEvent(undefined, screen === 'calendar' ? selected : todayKey));
 
 // swipe left/right on the calendar to move month/week
 {
@@ -1102,7 +1244,15 @@ document.addEventListener('visibilitychange', () => {
 
 /* ------------------------------- boot ------------------------------ */
 
-const saver = initSaver({ getState: S, colorOf, getForecast: () => forecast });
+const saver = initSaver({
+  getState: S,
+  colorOf,
+  getForecast: () => forecast,
+  // like a kiosk: after a while untouched, come back to the Today screen
+  onShow: () => {
+    if (screen !== 'today' && !document.querySelector('dialog[open]')) goTo('today');
+  },
+});
 initNotifications(S, (title, body) => toast([h('div', { class: 'toast-body' }, h('div', { class: 'toast-title' }, title), body)], 15000));
 setWakeLock(S().settings.keepAwake);
 initTimers();

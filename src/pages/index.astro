@@ -1,4 +1,6 @@
 ---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/fraunces';
 import '../styles/global.css';
 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -33,7 +35,7 @@ const reminderOptions: [string, string][] = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-    <meta name="theme-color" content="#111318" />
+    <meta name="theme-color" content="#F6F1E7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -48,52 +50,85 @@ const reminderOptions: [string, string][] = [
       <header class="top">
         <div class="clock">
           <div id="clock-time" class="time">--:--</div>
-          <div id="clock-date" class="date"></div>
-          <div id="next-up" class="next-up"></div>
+          <div class="clock-side">
+            <div id="clock-date" class="date"></div>
+            <div id="next-up" class="next-up"></div>
+          </div>
         </div>
+        <div id="timers" class="timers" aria-live="polite"></div>
         <button id="weather" class="weather-chip" type="button" aria-label="Weather"></button>
         <nav id="member-filter" class="members" aria-label="Show or hide family members"></nav>
-        <div id="timers" class="timers" aria-live="polite"></div>
-        <div class="actions">
-          <button id="btn-timer" class="btn icon" type="button" aria-label="Timers" title="Timers">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2M9 2h6M12 2v3"></path></svg>
-          </button>
-          <button id="btn-members" class="btn icon" type="button" aria-label="Family" title="Family members">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          </button>
-          <button id="btn-settings" class="btn icon" type="button" aria-label="Settings" title="Settings">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          </button>
-        </div>
       </header>
 
-      <main class="layout">
-        <section class="month" aria-label="Calendar">
-          <div class="month-head">
-            <button id="prev" class="btn icon" type="button" aria-label="Previous">‹</button>
-            <h1 id="month-title"></h1>
-            <div id="view-seg" class="seg compact" role="tablist">
-              <button type="button" data-view="month">Month</button>
-              <button type="button" data-view="week">Week</button>
-            </div>
-            <button id="today-btn" class="btn" type="button">Today</button>
-            <button id="next" class="btn icon" type="button" aria-label="Next">›</button>
+      <main class="screens">
+        <!-- Today home -->
+        <section id="screen-today" class="screen screen-today" aria-label="Today">
+          <div class="card today-card">
+            <div class="card-head"><h2>Today</h2><span id="today-meta" class="card-meta"></span></div>
+            <ul id="today-list" class="tlist"></ul>
           </div>
-          <div id="cal-area" class="cal-area">
-            <div id="month-wrap" class="month-wrap">
-              <div class="weekdays">{weekdays.map((d) => <span>{d}</span>)}</div>
-              <div id="grid" class="grid"></div>
-            </div>
-            <div id="week" class="week" hidden></div>
+          <div class="card soft tomorrow-card">
+            <div class="card-head"><h2>Tomorrow</h2><span id="tomorrow-date" class="card-meta"></span></div>
+            <ul id="tomorrow-list" class="tlist small"></ul>
+            <button id="today-notes" class="fridge" type="button"></button>
           </div>
+          <aside id="today-aside" class="today-aside"></aside>
         </section>
 
-        <aside class="agenda" aria-label="Day, lists and notes">
-          <div id="side-top" class="side-top"></div>
-          <div id="side-tabs" class="seg tabs" role="tablist"></div>
-          <div id="side-body" class="side-body"></div>
-        </aside>
+        <!-- Week / month -->
+        <section id="screen-calendar" class="screen layout" aria-label="Calendar" hidden>
+          <section class="month" aria-label="Calendar">
+            <div class="month-head">
+              <button id="prev" class="btn icon" type="button" aria-label="Previous">‹</button>
+              <h1 id="month-title"></h1>
+              <button id="today-btn" class="btn" type="button">Today</button>
+              <button id="next" class="btn icon" type="button" aria-label="Next">›</button>
+            </div>
+            <div id="cal-area" class="cal-area">
+              <div id="month-wrap" class="month-wrap">
+                <div class="weekdays">{weekdays.map((d) => <span>{d}</span>)}</div>
+                <div id="grid" class="grid"></div>
+              </div>
+              <div id="week" class="week" hidden></div>
+            </div>
+          </section>
+          <aside class="agenda" aria-label="Selected day">
+            <div id="side-top" class="side-top"></div>
+            <div id="side-body" class="side-body"></div>
+          </aside>
+        </section>
+
+        <!-- Lists -->
+        <section id="screen-lists" class="screen screen-panel" aria-label="Lists" hidden>
+          <div id="lists-body" class="card panel-card side-body"></div>
+        </section>
+
+        <!-- Notes -->
+        <section id="screen-notes" class="screen screen-panel" aria-label="Notes" hidden>
+          <div id="notes-body" class="card panel-card side-body"></div>
+        </section>
       </main>
+
+      <nav class="bottom-nav" aria-label="Screens">
+        <div id="screen-nav" class="screen-nav">
+          <button type="button" data-screen="today">Today</button>
+          <button type="button" data-screen="week">Week</button>
+          <button type="button" data-screen="month">Month</button>
+          <button type="button" data-screen="lists">Lists</button>
+          <button type="button" data-screen="notes">Notes</button>
+        </div>
+        <span class="spacer"></span>
+        <button id="btn-timer" class="round" type="button" aria-label="Timers" title="Timers">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2M9 2h6M12 2v3"></path></svg>
+        </button>
+        <button id="btn-members" class="round" type="button" aria-label="Family" title="Family members">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </button>
+        <button id="btn-settings" class="round" type="button" aria-label="Settings" title="Settings">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+        <button id="nav-add" class="btn primary add-big" type="button">+ Add</button>
+      </nav>
     </div>
 
     <!-- Event editor -->

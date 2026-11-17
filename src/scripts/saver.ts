@@ -19,9 +19,10 @@ interface Deps {
   getState: () => State;
   colorOf: (e: CalEvent) => string;
   getForecast: () => Forecast | null;
+  onShow?: () => void;
 }
 
-export function initSaver({ getState, colorOf, getForecast }: Deps) {
+export function initSaver({ getState, colorOf, getForecast, onShow }: Deps) {
   const el = $('#screensaver');
   const bgA = h('div', { class: 'saver-bg' });
   const bgB = h('div', { class: 'saver-bg' });
@@ -72,6 +73,7 @@ export function initSaver({ getState, colorOf, getForecast }: Deps) {
   function show() {
     if (dialogOpen()) return arm(); // don't hide a half-filled form
     active = true;
+    onShow?.();
     paint();
     nextPhoto();
     el.classList.add('on');

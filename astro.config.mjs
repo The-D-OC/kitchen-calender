@@ -1,8 +1,7 @@
 import { defineConfig } from 'astro/config';
 
-// Everything (CSS + JS) is inlined into a single index.html so the
-// built site can be dropped onto any static host, or opened on the tablet.
+// CSS is inlined into the page; fonts and scripts are separate hashed files
+// under /_astro/ so the tablet caches them for good (see public/_headers).
 export default defineConfig({
   build: { inlineStylesheets: 'always' },
-  vite: { build: { assetsInlineLimit: 1_000_000 } },
 });
