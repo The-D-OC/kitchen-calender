@@ -29,6 +29,7 @@ import { addPhotos, clearPhotos, photoCount } from './photos';
 import { importIcsFile, initFeeds, normaliseUrl, syncFeed } from './feeds';
 import { householdKey, initHousehold } from './household';
 import { backupStatusText, initBackup } from './backup';
+import { applyTheme, initTheme, themeStatus } from './theme';
 import { countdownChip, countdownLabel, initCountdowns, openCountdowns, upcoming } from './countdowns';
 import { binIcon, binLabel, binNoticeEl, binsOn, initBins, nextCollection, openBins } from './bins';
 
@@ -176,6 +177,7 @@ async function refreshWeather(force = false) {
   if (!place) return renderWeatherChip();
   try {
     forecast = await fetchWeather(place, force);
+    applyTheme();
   } catch {
     /* keep showing the cached forecast */
   }
@@ -249,7 +251,8 @@ export function goTo(next: Screen | 'week' | 'month') {
 
 /* ------------------------------ Today home ------------------------------ */
 
-const shade = (c: string) => `color-mix(in srgb, ${c} 72%, #1c1a16)`;
+// darker shade of a person's colour for text (lighter in the dark theme, via --shade-to)
+const shade = (c: string) => `color-mix(in srgb, ${c} 72%, var(--shade-to))`;
 
 function todayRow(e: CalEvent, now: Date, nextId?: string) {
   const past = endOf(e, todayKey) <= now;
@@ -990,6 +993,8 @@ function openSettings(scrollTo?: string) {
   renderWeatherSetting();
   renderFeeds();
   $('#backup-status').textContent = backupStatusText();
+  $<HTMLSelectElement>('#set-theme').value = s.theme;
+  $('#theme-status').textContent = themeStatus();
   $('#phones-status').textContent = householdKey() ? 'Phones can send events, shopping, to-dos and notes here.' : 'Not set up yet.';
   settingsDialog.showModal();
   if (scrollTo) setTimeout(() => document.getElementById(scrollTo)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 60);
@@ -998,6 +1003,11 @@ function openSettings(scrollTo?: string) {
 $('#btn-settings').addEventListener('click', () => openSettings());
 $('#weather').addEventListener('click', openWeather);
 $('#weather-refresh').addEventListener('click', () => refreshWeather(true).then(openWeather));
+
+$('#set-theme').addEventListener('change', () => {
+  store.update((st) => (st.settings.theme = $<HTMLSelectElement>('#set-theme').value as 'auto' | 'light' | 'dark'));
+  $('#theme-status').textContent = themeStatus();
+});
 
 idleSel.addEventListener('change', () => {
   store.update((s) => (s.settings.idleMinutes = Number(idleSel.value)));
@@ -1261,6 +1271,7 @@ initNotes();
 initFeeds(S);
 initHousehold();
 initBackup();
+initTheme();
 initCountdowns();
 initBins();
 $('#btn-countdowns').addEventListener('click', openCountdowns);

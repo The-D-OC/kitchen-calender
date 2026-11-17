@@ -8,6 +8,8 @@ export interface DayForecast {
   max: number;
   min: number;
   rain: number;
+  sunrise?: string; // HH:MM local
+  sunset?: string;
 }
 export interface Forecast {
   fetchedAt: number;
@@ -37,7 +39,7 @@ export async function fetchWeather(place: Place, force = false): Promise<Forecas
     latitude: String(place.lat),
     longitude: String(place.lon),
     current: 'temperature_2m,weather_code',
-    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset',
     timezone: 'auto',
     forecast_days: '7',
   });
@@ -55,6 +57,8 @@ export async function fetchWeather(place: Place, force = false): Promise<Forecas
       max: Math.round(j.daily.temperature_2m_max[i]),
       min: Math.round(j.daily.temperature_2m_min[i]),
       rain: j.daily.precipitation_probability_max?.[i] ?? 0,
+      sunrise: (j.daily.sunrise?.[i] as string | undefined)?.slice(11, 16),
+      sunset: (j.daily.sunset?.[i] as string | undefined)?.slice(11, 16),
     })),
   };
   localStorage.setItem(CACHE_KEY, JSON.stringify(f));

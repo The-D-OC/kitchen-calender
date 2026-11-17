@@ -128,6 +128,8 @@ export interface Settings {
   /** Speak bells and timers out loud */
   voice: boolean;
   countdownUnit: 'sleeps' | 'days';
+  /** Light by day, dark after sunset ('auto'), or fixed */
+  theme: 'auto' | 'light' | 'dark';
   /** Bin reminder: evening before or morning of, at this time ('' = off) */
   binRemindWhen: 'before' | 'same';
   binRemindTime: string;

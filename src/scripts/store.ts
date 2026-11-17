@@ -35,6 +35,7 @@ const defaultSettings = (): Settings => ({
   photoSeconds: 60,
   voice: true,
   countdownUnit: 'sleeps',
+  theme: 'auto',
   binRemindWhen: 'before',
   binRemindTime: '19:00',
 });

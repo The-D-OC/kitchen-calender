@@ -6,7 +6,7 @@ An always-on kitchen calendar for a wall or counter tablet. Built with **Astro +
 
 Inspired by the Amazon Echo Show family hub and Google Nest Hub, built for a touch tablet in the kitchen.
 
-**Design.** The look is "Today Board": a warm paper theme with a serif clock (Fraunces and Inter, bundled so they work offline) and events tinted in each person's colour. The screen saver stays dark for night-time.
+**Design.** The look is "Today Board": a warm paper theme with a serif clock (Fraunces and Inter, bundled so they work offline) and events tinted in each person's colour. In the evening it switches to a warm dark version automatically, at the real sunset for your weather location (or 7pm without one) and back at sunrise. You can also fix it to always light or always dark in ⚙ Settings → Screen. The screen saver is always dark.
 
 **Screens.** The bottom bar switches between **Today · Week · Month · Lists · Notes**, with Timers, Family, Settings and **+ Add**.
 - **Today** is the home screen. It shows today's events as big tinted cards and tomorrow at a glance. It also has notes on the fridge and tiles for bins, countdowns and shopping or to-dos.

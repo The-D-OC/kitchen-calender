@@ -305,6 +305,16 @@ const reminderOptions: [string, string][] = [
             <label class="field"><span>until</span><select id="set-night-end"></select></label>
             <button class="btn" type="button" id="set-saver-now">Preview</button>
           </div>
+          <div class="row">
+            <label class="field"><span>Theme</span>
+              <select id="set-theme">
+                <option value="auto">Auto — light by day, dark after sunset</option>
+                <option value="light">Always light</option>
+                <option value="dark">Always dark</option>
+              </select>
+            </label>
+          </div>
+          <small id="theme-status" class="muted"></small>
           <label class="toggle"><input type="checkbox" id="set-awake" /> <span>Keep the screen on while the calendar is open</span></label>
           <small id="wake-status" class="muted"></small>
         </section>
